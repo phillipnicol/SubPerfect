@@ -3,6 +3,7 @@
 #include<vector>
 #include"position.h"
 #include"moves.h"
+#include"bithacks.h"
 
 namespace Moves {
     std::vector<Move> getRookMoves(Position position) {
@@ -11,6 +12,7 @@ namespace Moves {
         uint64_t rooks = position.white_to_move ? position.White.ROOK : position.Black.ROOK;
 
         //get squares
+        std::vector<char> squares = BitHacks::serialize(rooks);
         
         //loop over squares 
     }

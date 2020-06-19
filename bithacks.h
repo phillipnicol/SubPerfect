@@ -7,6 +7,7 @@
 
 namespace BitHacks {
     void init();
+    std::vector<char> serialize(uint64_t bitboard) ;
 }
 
 
