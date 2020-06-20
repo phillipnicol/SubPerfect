@@ -107,12 +107,13 @@ std::vector<std::vector<uint64_t> > makeRays() {
         Rays[W][i] = newray;
 
         //Northwest
-        counter = i+5;
+        counter = i+7;
         newray = 0;
-        while(counter < 64 && (counter-5) % 8 != 0) {
+        while(counter < 64 && (counter-7) % 8 != 0) {
             newray += 1ULL << counter;
-            counter += 5; 
+            counter += 7; 
         }
+        Rays[NW][i] = newray;
     }
     return Rays; 
 }

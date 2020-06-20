@@ -17,8 +17,8 @@ test: CC_FLAGS = -Wall -std=c++11 -O3 -march=native -flto -pthread
 
 OBJ_DIR = obj
 
-BIN_NAME = testbin
-TEST_BIN_NAME = shallowbluetest
+BIN_NAME = SubPerfect
+TEST_BIN_NAME = SubPerfectTest
 
 all: $(OBJ_DIR) $(BIN_NAME)
 test: $(OBJ_DIR) $(TEST_BIN_NAME)

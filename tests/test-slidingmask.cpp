@@ -3,6 +3,7 @@
 #include<iostream>
 
 extern std::vector<uint64_t> RookMasks;
+extern std::vector<uint64_t> BishopMasks;
 
 TEST_CASE("Masks for sliding pieces is correct") {
     BitHacks::init();
@@ -26,5 +27,29 @@ TEST_CASE("Masks for sliding pieces is correct") {
         //Test in the middle of the board 
         REQUIRE(RookMasks[35] == 2261102847592448ULL);
         REQUIRE(RookMasks[21] == 9042521608822784ULL);
+    }
+    SECTION("BishopMask is constructed correctly") {
+        //Test corners
+        //A1
+        REQUIRE(BishopMasks[0] == 18049651735527936ULL);
+        //H1
+        REQUIRE(BishopMasks[7] == 567382630219776ULL);
+        //A8
+        REQUIRE(BishopMasks[56] == 567382630219776ULL);
+        //H8
+        REQUIRE(BishopMasks[63] == 18049651735527936ULL);
+
+        //Test middle of edges 
+        std::cout << BishopMasks[24] << std::endl;
+        BitHacks::printBitBoard(BishopMasks[24]); 
+
+        std::cout << BishopMasks[60] << std::endl;
+        BitHacks::printBitBoard(BishopMasks[60]); 
+
+        std::cout << BishopMasks[39] << std::endl;
+        BitHacks::printBitBoard(BishopMasks[39]); 
+
+        std::cout << BishopMasks[3] << std::endl;
+        BitHacks::printBitBoard(BishopMasks[3]); 
     }
 }
