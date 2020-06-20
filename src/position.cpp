@@ -19,10 +19,26 @@ std::vector<Move> Position::getMoves() {
 }
 
 
-
+void Position::setFEN(std::string FEN) {
+    //TODO
+}
 
 //Print position to the terminal
 //For debugging purposes 
 void Position::printPosition() {
-    //TODO 
+    char board[8][8];
+    for(int i = 0; i < 8; ++i) {
+        for(int j = 0; j < 8; ++j) {
+            if(White.PAWN & (1ULL << (8*i+j))) {board[i][j] = 'P';}
+            if(White.ROOK & (1ULL << (8*i+j))) {board[i][j] = 'R';}
+            if(White.BISHOP & (1ULL << (8*i+j))) {board[i][j] = 'B';}
+            if(White.QUEEN & (1ULL << (8*i+j))) {board[i][j] = 'Q';}
+            if(White.KING & (1ULL << (8*i+j))) {board[i][j] = 'K';}
+            if(Black.PAWN & (1ULL << (8*i+j))) {board[i][j] = 'p';}
+            if(Black.ROOK & (1ULL << (8*i+j))) {board[i][j] = 'r';}
+            if(Black.BISHOP & (1ULL << (8*i+j))) {board[i][j] = 'b';}
+            if(Black.QUEEN & (1ULL << (8*i+j))) {board[i][j] = 'q';}
+            if(Black.QUEEN & (1ULL << (8*i+j))) {board[i][j] = 'k';}
+        }
+    }
 }

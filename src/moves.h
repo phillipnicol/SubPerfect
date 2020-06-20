@@ -9,6 +9,4 @@ struct Move {
     char origin, destination;
 };
 
-extern std::vector<std::vector<uint64_t> > Rays;
-
 #endif

@@ -1,3 +1,4 @@
+#include<string>
 #include"board.h"
 #include"moves.h"
 
@@ -6,18 +7,20 @@
 
 class Position {
     public:
-        //Information about the pieces
+        //Piece bitboards 
         Board White, Black;
 
         //general game information
         bool white_to_move; 
-        bool white_castle, black_castle; //castling
-        bool prev_move_pawn; //was the last move a pawn? For en passant
-        Move* prev_move; //pointer to the previous move 
+        bool castling[4];
+        char en_passant_target; //will be 65 if no en passant target 
 
         //Methods
         //Find the list of legal moves 
         std::vector<Move> getMoves();
+
+        //set up position
+        void setFEN(std::string FEN); 
 
         //print board to terminal
         void printPosition();
