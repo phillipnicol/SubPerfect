@@ -1,3 +1,5 @@
+#include<vector>
+
 #ifndef MOVES_H_INCLUDED
 #define MOVES_H_INCLUDED
 
@@ -6,5 +8,7 @@
 struct Move {
     char origin, destination;
 };
+
+extern std::vector<std::vector<uint64_t> > Rays;
 
 #endif
