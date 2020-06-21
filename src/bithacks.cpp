@@ -6,6 +6,7 @@
 std::vector<uint64_t> BishopMasks(64,0);
 std::vector<uint64_t> RookMasks(64,0);
 
+std::vector<std::vector<uint64_t> > BishopMagicBB(64, std::vector<uint64_t>()); 
 std::vector<std::vector<uint64_t> > RookMagicBB(64, std::vector<uint64_t>()); 
 
 void BitHacks::init() {
@@ -33,18 +34,37 @@ std::vector<char> BitHacks::serialize(uint64_t bitboard) {
     return squares;
 }
 
+void BitHacks::fillBishopMagicBB(std::vector<std::vector<uint64_t> > &Rays) {
+    //Ensure that the vector is initialized with all 0's    
+    for(int i = 0; i < 64; ++i) {
+        BishopMagicBB[i].clear();
+        BishopMagicBB[i] = std::vector<uint64_t> ((1 << BishopAttackBits[i]), 0); 
+
+        for(int j = 0; j < (1 << BishopAttackBits[i]); ++j) {
+            uint64_t blocker = getBlocker(j, BishopMasks[i]); 
+            uint64_t bishop_attack = getBishopAttacksFromBlocker(i, blocker, Rays);
+
+            uint64_t index_mapping = blocker * BishopMagics[i];
+            //Get key by shifting back
+            uint64_t key = index_mapping >> (64 - BishopAttackBits[i]); 
+            BishopMagicBB[i][key] = bishop_attack; 
+        }
+    }
+}
+
 void BitHacks::fillRookMagicBB(std::vector<std::vector<uint64_t> > &Rays) {
     //Ensure that the vector is initialized with all 0's 
     for(int i = 0; i < 64; ++i) {
         RookMagicBB[i].clear(); 
         RookMagicBB[i] = std::vector<uint64_t> ((1 << RookAttackBits[i]), 0); 
+
         for(int j = 0; j < (1 << RookAttackBits[i]); ++j) {
             uint64_t blocker = getBlocker(j, RookMasks[i]); 
             uint64_t rook_attack = getRookAttacksFromBlocker(i, blocker, Rays); 
             
             uint64_t index_mapping = blocker * RookMagics[i]; 
             //Get key by shifting back
-            int key = index_mapping >> (64 - RookAttackBits[i]); 
+            uint64_t key = index_mapping >> (64 - RookAttackBits[i]); 
             RookMagicBB[i][key] = rook_attack; 
         }
     }
@@ -165,18 +185,78 @@ uint64_t getBlocker(int index, uint64_t mask) {
     return blocker;
 }
 
-uint64_t getRookAttacksFromBlocker(int square, uint64_t blocker, std::vector<std::vector<uint64_t> > &Rays) {
-    uint64_t rook_attack = Rays[N][square] | Rays[E][square] | Rays[S][square] | Rays[W][square]; 
-
-    std::vector<char> on_bits = BitHacks::serialize(blocker); 
-
-    for(int i = 0; i < on_bits.size(); ++i) {
-        if(i < square) {
-            rook_attack &= (Rays[N][i] | Rays[E][i]);
-        }
-        else {
-            rook_attack &= (Rays[S][i] | Rays[W][i]); 
-        }
+uint64_t getBishopAttacksFromBlocker(int square, uint64_t blocker, std::vector<std::vector<uint64_t> > &Rays) {
+    //Do each direction 
+    //NE
+    uint64_t ne_attack = Rays[NE][square]; 
+    std::vector<char> on_bits = BitHacks::serialize(blocker & Rays[NE][square]); 
+    std::vector<char>::iterator c; 
+    if(on_bits.size() > 0) {
+        c = std::min_element(on_bits.begin(), on_bits.end());
+        ne_attack &= (Rays[SW][*c] | (1ULL << *c));         
     }
-    return rook_attack; 
+
+    //SE  
+    uint64_t se_attack = Rays[SE][square]; 
+    on_bits = BitHacks::serialize(blocker & Rays[SE][square]); 
+    if(on_bits.size() > 0) {
+        c = std::max_element(on_bits.begin(), on_bits.end());
+        se_attack &= (Rays[NW][*c] | (1ULL << *c)); 
+    }
+
+    //SW 
+    uint64_t sw_attack = Rays[SW][square]; 
+    on_bits = BitHacks::serialize(blocker & Rays[SW][square]); 
+    if(on_bits.size() > 0) {
+        c = std::max_element(on_bits.begin(), on_bits.end());
+        sw_attack &= (Rays[NE][*c] | (1ULL << *c));        
+    }
+
+    //NW
+    uint64_t nw_attack = Rays[NW][square]; 
+    on_bits = BitHacks::serialize(blocker & Rays[NW][square]); 
+    if(on_bits.size() > 0) {
+        c = std::min_element(on_bits.begin(), on_bits.end());
+        nw_attack &= (Rays[SE][*c] | (1ULL << *c));         
+    }
+
+    return (nw_attack | se_attack | sw_attack | ne_attack);     
+}
+
+uint64_t getRookAttacksFromBlocker(int square, uint64_t blocker, std::vector<std::vector<uint64_t> > &Rays) {
+    //Do each direction 
+    //North 
+    uint64_t north_attack = Rays[N][square]; 
+    std::vector<char> on_bits = BitHacks::serialize(blocker & Rays[N][square]); 
+    std::vector<char>::iterator c; 
+    if(on_bits.size() > 0) {
+        c = std::min_element(on_bits.begin(), on_bits.end());
+        north_attack &= (Rays[S][*c] | (1ULL << *c));         
+    }
+
+    //East 
+    uint64_t east_attack = Rays[E][square]; 
+    on_bits = BitHacks::serialize(blocker & Rays[E][square]); 
+    if(on_bits.size() > 0) {
+        c = std::min_element(on_bits.begin(), on_bits.end());
+        east_attack &= (Rays[W][*c] | (1ULL << *c)); 
+    }
+
+    //South 
+    uint64_t south_attack = Rays[S][square]; 
+    on_bits = BitHacks::serialize(blocker & Rays[S][square]); 
+    if(on_bits.size() > 0) {
+        c = std::max_element(on_bits.begin(), on_bits.end());
+        south_attack &= (Rays[N][*c] | (1ULL << *c));        
+    }
+
+    //West
+    uint64_t west_attack = Rays[W][square]; 
+    on_bits = BitHacks::serialize(blocker & Rays[W][square]); 
+    if(on_bits.size() > 0) {
+        c = std::max_element(on_bits.begin(), on_bits.end());
+        west_attack &= (Rays[E][*c] | (1ULL << *c));         
+    }
+
+    return (north_attack | east_attack | south_attack | west_attack); 
 }

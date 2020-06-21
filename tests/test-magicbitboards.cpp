@@ -5,24 +5,28 @@
 extern std::vector<std::vector<uint64_t> > RookMagicBB;
 extern std::vector<uint64_t> RookMasks;
 
-//This will test the magic bitboard construction 
-TEST_CASE("Function getBlockers works as expected") {
-    uint64_t BB = getBlocker(0, RookMasks[35]);
-    BitHacks::printBitBoard(BB);
-    REQUIRE(BB == 0ULL);
-
-    std::cout << "\n \n"; 
-
-    BB = getBlocker(1024, RookMasks[35]); 
-    BitHacks::printBitBoard(BB);
-}
-
-
-//Test 1 will have just a few blockers
-uint64_t test1 = (1ULL << 10) + (1ULL << 14) + (1ULL << 34) + (1ULL << 45);
-uint64_t test2 = 0ULL;
-uint64_t test3 = 0ULL; 
-
-TEST_CASE("Rook magic bitboard is correct") {
+TEST_CASE("Rook magic bitboard behaves as expected") {
     BitHacks::init(); 
+
+    uint64_t key;
+    //Corners are boxed in if they are surrounded by pieces 
+    uint64_t a1blocker = (1ULL << 1) + (1ULL << 8); 
+    a1blocker &= RookMasks[0];
+    key = (a1blocker*RookMagics[0]) >> (64 - RookAttackBits[0]); 
+    REQUIRE(RookMagicBB[0][key] == a1blocker);
+
+    uint64_t h1blocker = (1ULL << 6) + (1ULL << 15); 
+    h1blocker &= RookMasks[7];
+    key = (h1blocker*RookMagics[7]) >> (64 - RookAttackBits[7]); 
+    REQUIRE(RookMagicBB[7][key] == h1blocker);
+
+    uint64_t a8blocker = (1ULL << 48) + (1ULL << 57); 
+    a8blocker &= RookMasks[56];
+    key = (a8blocker*RookMagics[56]) >> (64 - RookAttackBits[56]); 
+    REQUIRE(RookMagicBB[56][key] == a8blocker);
+
+    uint64_t h8blocker = (1ULL << 62) + (1ULL << 55); 
+    h8blocker &= RookMasks[63];
+    key = (h8blocker*RookMagics[63]) >> (64 - RookAttackBits[63]); 
+    REQUIRE(RookMagicBB[63][key] == h8blocker);
 }
