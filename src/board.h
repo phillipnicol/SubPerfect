@@ -4,13 +4,13 @@
 #define BOARD_H_INCLUDED
 
 struct Board {
-    uint64_t ALL;
-    uint64_t PAWN;
-    uint64_t ROOK;
-    uint64_t KNIGHT;
-    uint64_t BISHOP;
-    uint64_t QUEEN;
-    uint64_t KING;
+    uint64_t all;
+    uint64_t pawn;
+    uint64_t rook;
+    uint64_t knight;
+    uint64_t bishop;
+    uint64_t queen;
+    uint64_t king;
 };
 
 #endif

@@ -5,17 +5,21 @@
 #ifndef POSITION_H_INCLUDED
 #define POSITION_H_INCLUDED
 
+enum Color {WHITE, BLACK}; 
+
 class Position {
     public:
         //Piece bitboards 
-        Board White, Black;
+        Board Pieces[2]; 
 
         //general game information
-        bool white_to_move; 
+        bool color; 
         bool castling[4];
         char en_passant_target; //will be 65 if no en passant target 
+        int halfmove_clock; //For 50 move draws
+        int fullmove_number; 
 
-        //Methods
+        //Public member functions
         //Find the list of legal moves 
         std::vector<Move> getMoves();
 
@@ -24,6 +28,12 @@ class Position {
 
         //print board to terminal
         void printPosition();
+    
+    private:
+        uint64_t all_pieces; 
+
+        //Private member functions  
+        void getRookMoves(std::vector<Move> &Moves); 
 };
 
 #endif 
