@@ -37,12 +37,12 @@ void BitHacks::fillRookMagicBB(std::vector<std::vector<uint64_t> > &Rays) {
     //Ensure that the vector is initialized with all 0's 
     for(int i = 0; i < 64; ++i) {
         RookMagicBB[i].clear(); 
-        RookMagicBB[i] = std::vector<uint64_t> ((1 << RookAttackBits[i]), 0);
+        RookMagicBB[i] = std::vector<uint64_t> ((1 << RookAttackBits[i]), 0); 
         for(int j = 0; j < (1 << RookAttackBits[i]); ++j) {
             uint64_t blocker = getBlocker(j, RookMasks[i]); 
             uint64_t rook_attack = getRookAttacksFromBlocker(i, blocker, Rays); 
             
-            uint64_t index_mapping = blocker * RookMagics[i];
+            uint64_t index_mapping = blocker * RookMagics[i]; 
             //Get key by shifting back
             int key = index_mapping >> (64 - RookAttackBits[i]); 
             RookMagicBB[i][key] = rook_attack; 
