@@ -40,16 +40,13 @@ TEST_CASE("Masks for sliding pieces is correct") {
         REQUIRE(BishopMasks[63] == 18049651735527936ULL);
 
         //Test middle of edges 
-        std::cout << BishopMasks[24] << std::endl;
-        BitHacks::printBitBoard(BishopMasks[24]); 
+        REQUIRE(BishopMasks[24] == 2256206450263040ULL);
+        REQUIRE(BishopMasks[60] == 11333774449049600ULL);
+        REQUIRE(BishopMasks[39] == 9077569074761728ULL);
+        REQUIRE(BishopMasks[3] == 1075975168ULL); 
 
-        std::cout << BishopMasks[60] << std::endl;
-        BitHacks::printBitBoard(BishopMasks[60]); 
-
-        std::cout << BishopMasks[39] << std::endl;
-        BitHacks::printBitBoard(BishopMasks[39]); 
-
-        std::cout << BishopMasks[3] << std::endl;
-        BitHacks::printBitBoard(BishopMasks[3]); 
+        //Test middle of board
+        REQUIRE(BishopMasks[35] == 9592139778506752ULL);
+        REQUIRE(BishopMasks[21] == 567383701868544ULL);
     }
 }
