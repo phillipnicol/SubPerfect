@@ -1,6 +1,5 @@
 #include"catch.hpp"
 #include"bithacks.h"
-#include<iostream>
 
 extern std::vector<uint64_t> RookMasks;
 extern std::vector<uint64_t> BishopMasks;
