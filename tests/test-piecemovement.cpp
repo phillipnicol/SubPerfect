@@ -51,11 +51,9 @@ TEST_CASE("Rook move mechanics are as expected") {
     SECTION("Rook can not capture a piece with of its own color") {
         Position position; 
         position.setFEN("8/1n6/8/8/4p3/8/1r4b1/8 b - - 0 1"); 
-        position.printPosition(); 
 
         std::vector<Move> moves = position.getMoves(); 
 
-        std::cout << moves.size() << std::endl;
         REQUIRE(moves.size() == 14); 
         const char target[10] = {1,8,10,11,12,13,17,25,33,41}; 
         std::vector<char> destinations; 
@@ -73,7 +71,6 @@ TEST_CASE("Rook move mechanics are as expected") {
     SECTION("Rook can capture a piece of the opposite color") {
         Position position; 
         position.setFEN("8/6R1/6n1/8/8/8/8/8 w - - 0 1");
-        position.printPosition(); 
 
         std::vector<Move> moves = position.getMoves(); 
         std::vector<char> destinations; 
@@ -91,6 +88,33 @@ TEST_CASE("Rook move mechanics are as expected") {
 
 TEST_CASE("Bishop movement is as expected") {
     SECTION("Bishop moves freely on an open board") {
-        //TODO 
+        //First we will set a white bishop in the corner on a1 
+        Position position; 
+        position.setFEN("8/8/8/8/8/8/8/B7 w - - 0 1");
+
+        std::vector<Move> moves = position.getMoves(); 
+        REQUIRE(moves[0].origin == 0);
+        REQUIRE(moves.size() == 7); 
+        const char target[7] = {9,18,27,36,45,54,63};
+        std::vector<char> destinations;
+        for(int i = 0; i < moves.size(); ++i) {
+            destinations.push_back(moves[i].destination);
+        }
+        std::sort(destinations.begin(), destinations.end()); 
+        for(int i = 0; i < moves.size(); ++i) {
+            REQUIRE(destinations[i] == target[i]);
+        }
+
+        //Now we will drop one on e4 
+        position.setFEN("8/8/8/8/4B3/8/8/8 w - - 0 1");
+
+        moves = position.getMoves(); 
+        destinations.clear(); 
+
+        std::cout << moves.size() << std::endl;
+        for(int i = 0; i < moves.size(); ++i) {
+            std::cout << int(moves[i].origin) << " " << int(moves[i].destination) << std::endl;
+            destinations.push_back(moves[i].destination); 
+        }
     }
 }
