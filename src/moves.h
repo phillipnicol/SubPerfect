@@ -14,6 +14,9 @@ namespace Moves {
     uint64_t getRookPseudoLegal(char square, uint64_t blockers);
     uint64_t getBishopPseudoLegal(char square, uint64_t blockers); 
     uint64_t getQueenPseudoLegal(char square, uint64_t blockers);
+
+    uint64_t findPinnedPieces(Board Friendly, Board Enemy, uint64_t all_pieces);
+    uint64_t getPinnedMoves(char square, uint64_t friendly_king, Board Enemy, uint64_t all_pieces);
 };
 
 extern std::vector<uint64_t> BishopMasks;

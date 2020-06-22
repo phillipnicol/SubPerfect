@@ -31,6 +31,7 @@ class Position {
     
     private:
         uint64_t all_pieces; 
+        uint64_t pinned; 
 
         //Private member functions  
         void getRookMoves(std::vector<Move> &Moves); 

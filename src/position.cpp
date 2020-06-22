@@ -12,6 +12,9 @@ std::vector<Move> Position::getMoves() {
     std::vector<Move> Moves; 
     all_pieces = Pieces[0].all | Pieces[1].all; 
 
+    //Get pinned pieces
+    pinned = Moves::findPinnedPieces(Pieces[color], Pieces[!color], all_pieces);
+
     getRookMoves(Moves); 
     getBishopMoves(Moves); 
     getQueenMoves(Moves); 
@@ -176,18 +179,19 @@ void Position::printPosition() {
 /* ****** Private member functions ******* */ 
 
 void Position::getRookMoves(std::vector<Move> &Moves) {
-    std::vector<char> rook_squares = BitHacks::serialize(Pieces[color].rook);
-    for(int i = 0; i < rook_squares.size(); ++i) {
-        uint64_t rook_attacks = Moves::getRookPseudoLegal(rook_squares[i], all_pieces); 
+    std::vector<char> rook_square = BitHacks::serialize(Pieces[color].rook);
+    for(int i = 0; i < rook_square.size(); ++i) {
+        uint64_t rook_attacks = Moves::getRookPseudoLegal(rook_square[i], all_pieces); 
         rook_attacks &= ~Pieces[color].all; 
 
         //Now we need to find which ones are legal 
-        //Todo 
-        uint64_t legal_rook_attacks = rook_attacks; 
+        if(pinned & (1ULL << rook_square[i])) {
+            rook_attacks &= Moves::getPinnedMoves(rook_square[i], Pieces[color].king, Pieces[!color], all_pieces); 
+        }
 
-        std::vector<char> destinations = BitHacks::serialize(legal_rook_attacks); 
+        std::vector<char> destinations = BitHacks::serialize(rook_attacks); 
         Move move;
-        move.origin = rook_squares[i];
+        move.origin = rook_square[i];
         for(int j = 0; j < destinations.size(); ++j) {
             move.destination = destinations[j];
             Moves.push_back(move);
@@ -196,19 +200,19 @@ void Position::getRookMoves(std::vector<Move> &Moves) {
 }
 
 void Position::getBishopMoves(std::vector<Move> &Moves) {
-    std::vector<char> bishop_squares = BitHacks::serialize(Pieces[color].bishop);
-    for(int i = 0; i < bishop_squares.size(); ++i) {
-        uint64_t bishop_attacks = Moves::getBishopPseudoLegal(bishop_squares[i], all_pieces);
+    std::vector<char> bishop_square = BitHacks::serialize(Pieces[color].bishop);
+    for(int i = 0; i < bishop_square.size(); ++i) {
+        uint64_t bishop_attacks = Moves::getBishopPseudoLegal(bishop_square[i], all_pieces);
         bishop_attacks &= ~Pieces[color].all;
 
-        //Now find which ones are legal
-        //TODO 
+        //Now remove illegal moves
+        if(pinned & (1ULL << bishop_square[i])) {
+            bishop_attacks &= Moves::getPinnedMoves(bishop_square[i], Pieces[color].king, Pieces[!color], all_pieces);
+        }
 
-        uint64_t legal_bishop_attacks = bishop_attacks; 
-
-        std::vector<char> destinations = BitHacks::serialize(legal_bishop_attacks); 
+        std::vector<char> destinations = BitHacks::serialize(bishop_attacks); 
         Move move;
-        move.origin = bishop_squares[i];
+        move.origin = bishop_square[i];
         for(int j = 0; j < destinations.size(); ++j) {
             move.destination = destinations[j]; 
             Moves.push_back(move); 
@@ -217,19 +221,19 @@ void Position::getBishopMoves(std::vector<Move> &Moves) {
 }
 
 void Position::getQueenMoves(std::vector<Move> &Moves) {
-    std::vector<char> queen_squares = BitHacks::serialize(Pieces[color].queen);
-    for(int i = 0; i < queen_squares.size(); ++i) {
-        uint64_t queen_attacks = Moves::getQueenPseudoLegal(queen_squares[i], all_pieces);
+    std::vector<char> queen_square = BitHacks::serialize(Pieces[color].queen);
+    for(int i = 0; i < queen_square.size(); ++i) {
+        uint64_t queen_attacks = Moves::getQueenPseudoLegal(queen_square[i], all_pieces);
         queen_attacks &= ~Pieces[color].all;
 
-        //Now find which ones are legal
-        //TODO 
+        //Now remove illegal moves 
+        if(pinned & (1ULL << queen_square[i])) {
+            queen_attacks &= Moves::getPinnedMoves(queen_square[i], Pieces[color].king, Pieces[!color], all_pieces);
+        }
 
-        uint64_t legal_queen_attacks = queen_attacks; 
-
-        std::vector<char> destinations = BitHacks::serialize(legal_queen_attacks); 
+        std::vector<char> destinations = BitHacks::serialize(queen_attacks); 
         Move move;
-        move.origin = queen_squares[i];
+        move.origin = queen_square[i];
         for(int j = 0; j < destinations.size(); ++j) {
             move.destination = destinations[j]; 
             Moves.push_back(move); 
