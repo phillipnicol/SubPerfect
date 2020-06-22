@@ -57,7 +57,7 @@ TEST_CASE("Rook move mechanics are as expected") {
 
         std::cout << moves.size() << std::endl;
         REQUIRE(moves.size() == 14); 
-        const char target[14] = {1,8,10,11,12,13,17,25,33,41}; 
+        const char target[10] = {1,8,10,11,12,13,17,25,33,41}; 
         std::vector<char> destinations; 
         for(int i = 0; i < moves.size(); ++i) {
             if(moves[i].origin == 9) {
@@ -65,7 +65,7 @@ TEST_CASE("Rook move mechanics are as expected") {
             }
         }
         std::sort(destinations.begin(), destinations.end()); 
-        for(int i = 0; i < moves.size(); ++i) {
+        for(int i = 0; i < destinations.size(); ++i) {
             REQUIRE(destinations[i] == target[i]);
         }
     }
