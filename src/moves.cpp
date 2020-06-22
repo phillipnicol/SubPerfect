@@ -65,20 +65,19 @@ uint64_t Moves::findPinnedPieces(Board Friendly, Board Enemy, uint64_t all_piece
     return pinned;
 }
 
-//Maybe redundant given other calculations
-//Relying on the fact that 
+//FIX THIS 
 uint64_t Moves::getPinnedMoves(char square, uint64_t friendly_king, Board Enemy, uint64_t all_pieces) {
     //Remove pinned piece from the board 
     all_pieces &= ~(1ULL << square); 
 
     char king_location = __builtin_ctzl(friendly_king); 
     //First see if the pinning piece is diagonally moving 
-    uint64_t enemy_diagonal_sliders = Enemy.bishop | Enemy.queen; 
     uint64_t kingrays_diagonal = Moves::getBishopPseudoLegal(king_location, all_pieces);
-    if((kingrays_diagonal & enemy_diagonal_sliders) != 0) {
-        return kingrays_diagonal; 
+    if((kingrays_diagonal & (1ULL << square)) != 0) {
+        //the pin is diagonal 
+        uint64_t pinned_diagonal = Moves::getBishopPseudoLegal(square, all_pieces);
+        return (kingrays_diagonal & pinned_diagonal); 
     }
-
     //Otherwise it is a straight moving piece
-    return Moves::getRookPseudoLegal(king_location, all_pieces); 
+    return (Moves::getRookPseudoLegal(king_location, all_pieces) & Moves::getRookPseudoLegal(square, all_pieces));
 }
