@@ -1,6 +1,7 @@
 #include<vector>
 #include<cstdint>
 #include<iostream>
+#include<algorithm> 
 #include"bithacks.h"
 
 std::vector<uint64_t> BishopMasks(64,0);
