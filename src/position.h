@@ -36,4 +36,7 @@ class Position {
         void getRookMoves(std::vector<Move> &Moves); 
 };
 
+//starting position 
+const std::string STARTING_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+
 #endif 
