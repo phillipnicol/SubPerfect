@@ -11,9 +11,9 @@ OBJ_FILES = $(addprefix obj/,$(notdir $(CPP_FILES:.cpp=.o)))
 TEST_OBJ_FILES = $(addprefix obj/,$(notdir $(TEST_CPP_FILES:.cpp=.o)))
 
 LD_FLAGS ?= -pthread -flto
-CC_FLAGS ?= -Wall -std=c++11 -O3 -march=native -flto -pthread -fno-exceptions
+CC_FLAGS ?= -Wall -std=c++17 -O3 -march=native -flto -pthread -fno-exceptions
 
-test: CC_FLAGS = -Wall -std=c++11 -O3 -march=native -flto -pthread
+test: CC_FLAGS = -Wall -std=c++17 -O3 -march=native -flto -pthread
 
 OBJ_DIR = obj
 
