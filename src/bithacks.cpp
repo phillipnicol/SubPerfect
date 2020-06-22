@@ -12,7 +12,8 @@ std::vector<std::vector<uint64_t> > RookMagicBB(64, std::vector<uint64_t>());
 void BitHacks::init() {
     std::vector<std::vector<uint64_t> > Rays = makeRays();
     BitHacks::makeMasks(Rays);
-    
+
+    BitHacks::fillBishopMagicBB(Rays);   
     BitHacks::fillRookMagicBB(Rays);
 }
 

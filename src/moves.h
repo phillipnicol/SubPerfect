@@ -11,7 +11,8 @@ struct Move {
 };
 
 namespace Moves {
-    uint64_t getRookPseudoLegal(char square, uint64_t blockers); 
+    uint64_t getRookPseudoLegal(char square, uint64_t blockers);
+    uint64_t getBishopPseudoLegal(char square, uint64_t blockers); 
 };
 
 extern std::vector<uint64_t> BishopMasks;

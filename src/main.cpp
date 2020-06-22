@@ -8,4 +8,5 @@ int main() {
     Position position; 
     position.setFEN(STARTING_POSITION);
     position.printPosition();
+    std::vector<Move> moves = position.getMoves(); 
 }

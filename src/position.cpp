@@ -13,6 +13,7 @@ std::vector<Move> Position::getMoves() {
     all_pieces = Pieces[0].all | Pieces[1].all; 
 
     getRookMoves(Moves); 
+    getBishopMoves(Moves); 
     
     return Moves;
 }
@@ -60,8 +61,8 @@ void Position::setFEN(std::string FEN) {
     }
 
     //Set the 'all' bitboards
-    Pieces[WHITE].all = Pieces[WHITE].pawn | Pieces[WHITE].rook | Pieces[WHITE].bishop | Pieces[WHITE].queen | Pieces[WHITE].king; 
-    Pieces[BLACK].all = Pieces[BLACK].pawn | Pieces[BLACK].rook | Pieces[BLACK].bishop | Pieces[BLACK].queen | Pieces[BLACK].king;  
+    Pieces[WHITE].all = Pieces[WHITE].pawn | Pieces[WHITE].rook | Pieces[WHITE].knight | Pieces[WHITE].bishop | Pieces[WHITE].queen | Pieces[WHITE].king; 
+    Pieces[BLACK].all = Pieces[BLACK].pawn | Pieces[BLACK].rook | Pieces[BLACK].knight | Pieces[BLACK].bishop | Pieces[BLACK].queen | Pieces[BLACK].king;  
 
     //Next handle the color
     if(FEN.at(it) == 'w') {color = WHITE;}
@@ -174,8 +175,6 @@ void Position::printPosition() {
 /* ****** Private member functions ******* */ 
 
 void Position::getRookMoves(std::vector<Move> &Moves) {
-    std::vector<Move> RookMoves;
-
     std::vector<char> rook_squares = BitHacks::serialize(Pieces[color].rook);
     for(int i = 0; i < rook_squares.size(); ++i) {
         uint64_t rook_attacks = Moves::getRookPseudoLegal(rook_squares[i], all_pieces); 
@@ -191,6 +190,27 @@ void Position::getRookMoves(std::vector<Move> &Moves) {
         for(int j = 0; j < destinations.size(); ++j) {
             move.destination = destinations[j];
             Moves.push_back(move);
+        }
+    }
+}
+
+void Position::getBishopMoves(std::vector<Move> &Moves) {
+    std::vector<char> bishop_squares = BitHacks::serialize(Pieces[color].bishop);
+    for(int i = 0; i < bishop_squares.size(); ++i) {
+        uint64_t bishop_attacks = Moves::getBishopPseudoLegal(bishop_squares[i], all_pieces);
+        bishop_attacks &= ~Pieces[color].all;
+
+        //Now find which ones are legal
+        //TODO 
+
+        uint64_t legal_bishop_attacks = bishop_attacks; 
+
+        std::vector<char> destinations = BitHacks::serialize(legal_bishop_attacks); 
+        Move move;
+        move.origin = bishop_squares[i];
+        for(int j = 0; j < destinations.size(); ++j) {
+            move.destination = destinations[j]; 
+            Moves.push_back(move); 
         }
     }
 }
