@@ -14,6 +14,7 @@ std::vector<Move> Position::getMoves() {
 
     getRookMoves(Moves); 
     getBishopMoves(Moves); 
+    getQueenMoves(Moves); 
     
     return Moves;
 }
@@ -215,3 +216,23 @@ void Position::getBishopMoves(std::vector<Move> &Moves) {
     }
 }
 
+void Position::getQueenMoves(std::vector<Move> &Moves) {
+    std::vector<char> queen_squares = BitHacks::serialize(Pieces[color].queen);
+    for(int i = 0; i < queen_squares.size(); ++i) {
+        uint64_t queen_attacks = Moves::getQueenPseudoLegal(queen_squares[i], all_pieces);
+        queen_attacks &= ~Pieces[color].all;
+
+        //Now find which ones are legal
+        //TODO 
+
+        uint64_t legal_queen_attacks = queen_attacks; 
+
+        std::vector<char> destinations = BitHacks::serialize(legal_queen_attacks); 
+        Move move;
+        move.origin = queen_squares[i];
+        for(int j = 0; j < destinations.size(); ++j) {
+            move.destination = destinations[j]; 
+            Moves.push_back(move); 
+        }
+    }
+}

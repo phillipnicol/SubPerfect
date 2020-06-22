@@ -112,9 +112,72 @@ TEST_CASE("Bishop movement is as expected") {
         destinations.clear(); 
 
         std::cout << moves.size() << std::endl;
+        REQUIRE(moves.size() == 13);
         for(int i = 0; i < moves.size(); ++i) {
             std::cout << int(moves[i].origin) << " " << int(moves[i].destination) << std::endl;
             destinations.push_back(moves[i].destination); 
         }
+        const char target2[13] = {1,7,10,14,19,21,35,37,42,46,49,55,56};
+        std::sort(destinations.begin(), destinations.end()); 
+        for(int i = 0; i < destinations.size(); ++i) {
+            REQUIRE(destinations[i] == target2[i]); 
+        }
+    }
+    SECTION("Bishop will not capture pieces on its own team.") {
+        Position position;
+        position.setFEN("8/5B2/8/8/8/1P6/8/8 w - - 0 1");
+
+        std::vector<Move> moves = position.getMoves(); 
+        std::vector<char> destinations;
+        REQUIRE(moves.size() == 7); 
+        for(int i = 0; i < moves.size(); ++i) {
+            if(moves[i].origin == 53) {
+                destinations.push_back(moves[i].destination);
+            }
+        }
+
+        const char target[7] = {26,35,39,44,46,60,62};
+        std::sort(destinations.begin(), destinations.end());
+        for(int i = 0; i < destinations.size(); ++i) {
+            REQUIRE(destinations[i] == target[i]); 
+        }
+    }
+    SECTION("Bishop can capture pieces on the opposite side") {
+        Position position;
+        position.setFEN("8/8/8/2n5/1b6/8/8/8 b - - 0 1");
+
+        std::vector<Move> moves = position.getMoves(); 
+        std::vector<char> destinations;
+        REQUIRE(moves.size() == 5); 
+        for(int i = 0; i < moves.size(); ++i) {
+            destinations.push_back(moves[i].destination); 
+        }
+
+        const char target[7] = {4,11,16,18,32};
+        std::sort(destinations.begin(), destinations.end());
+        for(int i = 0; i < destinations.size(); ++i) {
+            REQUIRE(destinations[i] == target[i]); 
+        }
+    }
+}
+
+TEST_CASE("Queen movement is as expected") {
+    SECTION("Queen slides freely on an open board") {
+        //Let's try H1
+        Position position;
+        position.setFEN("8/8/8/8/8/8/8/7Q w - - 0 1");
+
+        std::vector<Move> moves = position.getMoves();
+        REQUIRE(moves.size() == 21); 
+        for(int i = 0; i < moves.size(); ++i) {
+            std::cout << int(moves[i].origin) << " " << int(moves[i].destination) << std::endl;
+        }
+
+        //Now let's try f6
+        position.setFEN("8/8/5q2/8/8/8/8/8 b - - 0 1");
+
+        moves = position.getMoves();
+
+        REQUIRE(moves.size() == 25); 
     }
 }

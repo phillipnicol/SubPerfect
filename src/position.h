@@ -35,6 +35,7 @@ class Position {
         //Private member functions  
         void getRookMoves(std::vector<Move> &Moves); 
         void getBishopMoves(std::vector<Move> &Moves); 
+        void getQueenMoves(std::vector<Move> &Moves);
 };
 
 //starting position 
