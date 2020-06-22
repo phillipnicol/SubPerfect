@@ -26,7 +26,7 @@ TEST_CASE("Rook move mechanics are as expected") {
             destinations.push_back(moves[i].destination);
         }
         std::sort(destinations.begin(), destinations.end());
-        const int target[14] = {1,2,3,4,5,6,7,8,16,24,32,40,48,56};
+        const char target[14] = {1,2,3,4,5,6,7,8,16,24,32,40,48,56};
         for(int i = 0; i < 14; ++i) {
             REQUIRE(destinations[i] == target[i]);
         }
@@ -42,7 +42,7 @@ TEST_CASE("Rook move mechanics are as expected") {
             destinations.push_back(moves[i].destination); 
         }
         std::sort(destinations.begin(), destinations.end()); 
-        const int target2[14] = {4,12,20,24,25,26,27,29,30,31,36,44,52,60}; 
+        const char target2[14] = {4,12,20,24,25,26,27,29,30,31,36,44,52,60}; 
         for(int i = 0; i < 14; ++i) {
             REQUIRE(destinations[i] == target2[i]); 
         }  
@@ -57,7 +57,7 @@ TEST_CASE("Rook move mechanics are as expected") {
 
         std::cout << moves.size() << std::endl;
         REQUIRE(moves.size() == 14); 
-        const int target[14] = {1,8,10,11,12,13,17,25,33,41}; 
+        const char target[14] = {1,8,10,11,12,13,17,25,33,41}; 
         std::vector<char> destinations; 
         for(int i = 0; i < moves.size(); ++i) {
             if(moves[i].origin == 9) {
@@ -82,7 +82,7 @@ TEST_CASE("Rook move mechanics are as expected") {
         }
         std::sort(destinations.begin(), destinations.end());
         REQUIRE(moves.size() == 9);
-        const int target[9] = {46,48,49,50,51,52,53,55,62}; 
+        const char target[9] = {46,48,49,50,51,52,53,55,62}; 
         for(int i = 0; i < moves.size(); ++i) {
             REQUIRE(destinations[i] == target[i]);
         }
