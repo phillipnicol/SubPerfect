@@ -1,5 +1,6 @@
 #include"bithacks.h"
 #include"position.h" 
+#include"moves.h"
 
 int main() {
     BitHacks::init();

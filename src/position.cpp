@@ -24,6 +24,7 @@ void Position::setFEN(std::string FEN) {
     Pieces[WHITE].bishop = 0ULL; Pieces[WHITE].queen = 0ULL; Pieces[WHITE].king = 0ULL; 
     Pieces[BLACK].pawn = 0ULL; Pieces[BLACK].rook = 0ULL; Pieces[BLACK].knight = 0ULL;
     Pieces[BLACK].bishop = 0ULL; Pieces[BLACK].queen = 0ULL; Pieces[BLACK].king = 0ULL; 
+    Pieces[WHITE].all = 0ULL; Pieces[BLACK].all = 0ULL;
 
     int it = 0; 
     int rank = 7; int file = 0; 
@@ -57,6 +58,10 @@ void Position::setFEN(std::string FEN) {
             ++it; 
         }
     }
+
+    //Set the 'all' bitboards
+    Pieces[WHITE].all = Pieces[WHITE].pawn | Pieces[WHITE].rook | Pieces[WHITE].bishop | Pieces[WHITE].queen | Pieces[WHITE].king; 
+    Pieces[BLACK].all = Pieces[BLACK].pawn | Pieces[BLACK].rook | Pieces[BLACK].bishop | Pieces[BLACK].queen | Pieces[BLACK].king;  
 
     //Next handle the color
     if(FEN.at(it) == 'w') {color = WHITE;}
@@ -175,6 +180,18 @@ void Position::getRookMoves(std::vector<Move> &Moves) {
     for(int i = 0; i < rook_squares.size(); ++i) {
         uint64_t rook_attacks = Moves::getRookPseudoLegal(rook_squares[i], all_pieces); 
         rook_attacks &= ~Pieces[color].all; 
+
+        //Now we need to find which ones are legal 
+        //Todo 
+        uint64_t legal_rook_attacks = rook_attacks; 
+
+        std::vector<char> destinations = BitHacks::serialize(legal_rook_attacks); 
+        Move move;
+        move.origin = rook_squares[i];
+        for(int j = 0; j < destinations.size(); ++j) {
+            move.destination = destinations[j];
+            Moves.push_back(move);
+        }
     }
 }
 
