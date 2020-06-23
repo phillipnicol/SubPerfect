@@ -6,6 +6,7 @@
 
 std::vector<uint64_t> BishopMasks(64,0);
 std::vector<uint64_t> RookMasks(64,0);
+std::vector<uint64_t> KingMasks(64,0);
 
 std::vector<std::vector<uint64_t> > BishopMagicBB(64, std::vector<uint64_t>()); 
 std::vector<std::vector<uint64_t> > RookMagicBB(64, std::vector<uint64_t>()); 
@@ -16,6 +17,8 @@ void BitHacks::init() {
 
     BitHacks::fillBishopMagicBB(Rays);   
     BitHacks::fillRookMagicBB(Rays);
+
+    BitHacks::makeKingMasks();
 }
 
 //serialize returns a vector of char consisting of the activated squares in a given bitboard
@@ -77,6 +80,25 @@ void BitHacks::makeMasks(std::vector<std::vector<uint64_t> > &Rays) {
     for(int i = 0; i < 64; ++i) {
         BishopMasks[i] = (Rays[NE][i] | Rays[SE][i] | Rays[SW][i] | Rays[NW][i]) & ~edgesquares; 
         RookMasks[i] = (Rays[N][i] & ~RANK_8) | (Rays[E][i] & ~FILE_H) | (Rays[S][i] & ~RANK_1) | (Rays[W][i] & ~FILE_A); 
+    }
+}
+
+void BitHacks::makeKingMasks() {
+    for(int i = 0; i < 64; ++i) {
+        uint64_t pos = 1ULL << i;
+        if((pos & FILE_A) != 0) {
+            KingMasks[i] = (pos << 9) | (pos >> 7) | (pos << 1);
+            KingMasks[i] |= (pos << 8) | (pos >> 8);
+        }
+        else if((pos & FILE_H) != 0) {
+            KingMasks[i] = (pos << 7) | (pos >> 9) | (pos >> 1);
+            KingMasks[i] |= (pos << 8) | (pos >> 8);             
+        }
+        else {
+            KingMasks[i] = (pos >> 9) | (pos << 7) | (pos >> 1);
+            KingMasks[i] |= (pos >> 7) | (pos << 9) | (pos << 1);
+            KingMasks[i] |= (pos << 8) | (pos >> 8);            
+        }
     }
 }
 

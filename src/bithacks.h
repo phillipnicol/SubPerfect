@@ -58,6 +58,7 @@ namespace BitHacks {
     void printBitBoard(uint64_t BB);
     void fillRookMagicBB(std::vector<std::vector<uint64_t> > &Rays);
 	void fillBishopMagicBB(std::vector<std::vector<uint64_t> > &Rays);
+	void makeKingMasks();
 }
 
 enum Directions {N, NE, E, SE, S, SW, W, NW};

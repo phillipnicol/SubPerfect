@@ -61,11 +61,9 @@ uint64_t Moves::findPinnedPieces(Board Friendly, Board Enemy, uint64_t all_piece
 
     //Now we combine this information 
     pinned = (kingrays_diagonal & enemy_diagonals) | (kingrays_straight & enemy_straights);
-    BitHacks::printBitBoard(pinned);
     return pinned;
 }
 
-//FIX THIS 
 uint64_t Moves::getPinnedMoves(char square, uint64_t friendly_king, Board Enemy, uint64_t all_pieces) {
     //Remove pinned piece from the board 
     all_pieces &= ~(1ULL << square); 
