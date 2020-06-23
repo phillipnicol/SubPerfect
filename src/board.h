@@ -14,7 +14,7 @@ struct Board {
 };
 
 /*
-Board representation for reference (from Chess Programming wikipedia )
+Board representation for reference (from Chess Programming wikipedia)
 
      A    B    C    D    E    F    G    H
    +----+----+----+----+----+----+----+----+

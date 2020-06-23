@@ -12,13 +12,15 @@ std::vector<Move> Position::getMoves() {
     std::vector<Move> Moves; 
     all_pieces = Pieces[0].all | Pieces[1].all; 
 
-    //Get pinned pieces
-    pinned = Moves::findPinnedPieces(Pieces[color], Pieces[!color], all_pieces);
+    int nchecks = getKingMoves(Moves);
 
-    getRookMoves(Moves); 
-    getBishopMoves(Moves); 
-    getQueenMoves(Moves); 
-    
+    if(nchecks < 2) {
+        pinned = Moves::findPinnedPieces(Pieces[color], Pieces[!color], all_pieces);
+
+        getRookMoves(Moves); 
+        getBishopMoves(Moves); 
+        getQueenMoves(Moves);         
+    }
     return Moves;
 }
 
@@ -183,6 +185,7 @@ void Position::getRookMoves(std::vector<Move> &Moves) {
     for(int i = 0; i < rook_square.size(); ++i) {
         uint64_t rook_attacks = Moves::getRookPseudoLegal(rook_square[i], all_pieces); 
         rook_attacks &= ~Pieces[color].all; 
+        rook_attacks &= piece_evasions; 
 
         //Now we need to find which ones are legal 
         if(pinned & (1ULL << rook_square[i])) {
@@ -204,6 +207,7 @@ void Position::getBishopMoves(std::vector<Move> &Moves) {
     for(int i = 0; i < bishop_square.size(); ++i) {
         uint64_t bishop_attacks = Moves::getBishopPseudoLegal(bishop_square[i], all_pieces);
         bishop_attacks &= ~Pieces[color].all;
+        bishop_attacks &= piece_evasions; 
 
         //Now remove illegal moves
         if(pinned & (1ULL << bishop_square[i])) {
@@ -225,6 +229,7 @@ void Position::getQueenMoves(std::vector<Move> &Moves) {
     for(int i = 0; i < queen_square.size(); ++i) {
         uint64_t queen_attacks = Moves::getQueenPseudoLegal(queen_square[i], all_pieces);
         queen_attacks &= ~Pieces[color].all;
+        queen_attacks &= piece_evasions; 
 
         //Now remove illegal moves 
         if(pinned & (1ULL << queen_square[i])) {
@@ -239,4 +244,71 @@ void Position::getQueenMoves(std::vector<Move> &Moves) {
             Moves.push_back(move); 
         }
     }
+}
+
+int Position::getKingMoves(std::vector<Move> &Moves) {
+    if(Pieces[color].king == 0ULL) {
+        piece_evasions = ~0ULL;
+        return 0; 
+    }
+    
+    char king_loc = __builtin_ctzl(Pieces[color].king); 
+    int nchecks = 0; 
+    piece_evasions = 0ULL; 
+
+    uint64_t king_attacks = Moves::getKingPseudoLegal(king_loc); 
+    king_attacks &= ~Pieces[color].all;
+
+    //consider diagonal sliders
+    uint64_t kingrays_diagonal = Moves::getBishopPseudoLegal(king_loc, all_pieces);
+    if((kingrays_diagonal & (Pieces[!color].bishop | Pieces[!color].queen)) != 0) {
+        //King in check by sliding piece
+        std::vector<char> attacking_pieces = BitHacks::serialize(kingrays_diagonal & (Pieces[!color].bishop | Pieces[!color].queen));
+        for(int i = 0; i < attacking_pieces.size(); ++i) {
+            piece_evasions |= kingrays_diagonal & Moves::getBishopPseudoLegal(attacking_pieces[i], all_pieces); 
+            //The Xray square is unsafe
+            //Remove the king from the board
+            king_attacks &= ~Moves::getBishopPseudoLegal(attacking_pieces[i], all_pieces & ~(1ULL << king_loc));
+            ++nchecks; 
+        }
+    }
+
+    //Consider straight sliders 
+    uint64_t kingrays_straight = Moves::getRookPseudoLegal(king_loc, all_pieces);
+    if((kingrays_straight & (Pieces[!color].rook | Pieces[!color].queen)) != 0) {
+        //King in check by sliding piece
+        std::vector<char> attacking_pieces = BitHacks::serialize(kingrays_straight & (Pieces[!color].rook | Pieces[!color].queen));
+        for(int i = 0; i < attacking_pieces.size(); ++i) {
+            piece_evasions |= kingrays_straight & Moves::getRookPseudoLegal(attacking_pieces[i], all_pieces); 
+            //The Xray square is unsafe
+            //Remove the king from the board
+            king_attacks &= ~Moves::getRookPseudoLegal(attacking_pieces[i], all_pieces & ~(1ULL << king_loc));
+            ++nchecks; 
+        }
+    }
+
+    //Consider knights
+    //TODO
+
+    //Consider pawns
+    //TODO 
+
+    //Write down the possible king moves 
+    std::vector<char> destinations = BitHacks::serialize(king_attacks); 
+    Move move;
+    move.origin = king_loc; 
+    for(int i = 0; i < destinations.size(); ++i) {
+        move.destination = destinations[i];
+        Moves.push_back(move); 
+    }
+
+    if(nchecks != 0) {
+        incheck = true; 
+    }
+    else {
+        //Not in check
+        incheck = false;
+        piece_evasions = ~0ULL; 
+    } 
+    return nchecks; 
 }

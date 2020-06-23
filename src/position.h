@@ -18,6 +18,7 @@ class Position {
         char en_passant_target; //will be 65 if no en passant target 
         int halfmove_clock; //For 50 move draws
         int fullmove_number; 
+        bool incheck; 
 
         //Public member functions
         //Find the list of legal moves 
@@ -32,11 +33,13 @@ class Position {
     private:
         uint64_t all_pieces; 
         uint64_t pinned; 
+        uint64_t piece_evasions; 
 
         //Private member functions  
         void getRookMoves(std::vector<Move> &Moves); 
         void getBishopMoves(std::vector<Move> &Moves); 
         void getQueenMoves(std::vector<Move> &Moves);
+        int getKingMoves(std::vector<Move> &Moves); 
 };
 
 //starting position 

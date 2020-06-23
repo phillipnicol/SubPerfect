@@ -25,6 +25,10 @@ uint64_t Moves::getQueenPseudoLegal(char square, uint64_t blockers) {
     return (Moves::getBishopPseudoLegal(square, blockers) | Moves::getRookPseudoLegal(square, blockers));
 }
 
+uint64_t Moves::getKingPseudoLegal(char square) {
+    return KingMasks[square]; 
+}
+
 uint64_t Moves::findPinnedPieces(Board Friendly, Board Enemy, uint64_t all_pieces) {
     uint64_t pinned = 0ULL;
     //If no king, simply return nothing
