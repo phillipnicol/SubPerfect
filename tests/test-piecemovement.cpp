@@ -6,8 +6,9 @@ is correct.
 
 #include"catch.hpp"
 #include"bithacks.h"
-#include"position.h" 
+#include"board.h"
 #include"moves.h" 
+#include"position.h" 
 #include<iostream>
 
 TEST_CASE("Rook move mechanics are as expected") {

@@ -3,10 +3,10 @@
 #include<cctype>
 #include<clocale> 
 #include<iostream>
+#include"bithacks.h" 
 #include"board.h"
 #include"moves.h"
 #include"position.h"
-#include"bithacks.h" 
 
 std::vector<Move> Position::getMoves() {
     std::vector<Move> Moves; 
@@ -195,6 +195,7 @@ void Position::getRookMoves(std::vector<Move> &Moves) {
         std::vector<char> destinations = BitHacks::serialize(rook_attacks); 
         Move move;
         move.origin = rook_square[i];
+        move.aggressor = ROOK; 
         for(int j = 0; j < destinations.size(); ++j) {
             move.destination = destinations[j];
             Moves.push_back(move);
@@ -217,6 +218,7 @@ void Position::getBishopMoves(std::vector<Move> &Moves) {
         std::vector<char> destinations = BitHacks::serialize(bishop_attacks); 
         Move move;
         move.origin = bishop_square[i];
+        move.aggressor = BISHOP; 
         for(int j = 0; j < destinations.size(); ++j) {
             move.destination = destinations[j]; 
             Moves.push_back(move); 
@@ -239,6 +241,7 @@ void Position::getQueenMoves(std::vector<Move> &Moves) {
         std::vector<char> destinations = BitHacks::serialize(queen_attacks); 
         Move move;
         move.origin = queen_square[i];
+        move.aggressor = QUEEN; 
         for(int j = 0; j < destinations.size(); ++j) {
             move.destination = destinations[j]; 
             Moves.push_back(move); 
@@ -297,6 +300,7 @@ int Position::getKingMoves(std::vector<Move> &Moves) {
     std::vector<char> destinations = BitHacks::serialize(king_attacks); 
     Move move;
     move.origin = king_loc; 
+    move.aggressor = KING;
     for(int i = 0; i < destinations.size(); ++i) {
         move.destination = destinations[i];
         Moves.push_back(move); 

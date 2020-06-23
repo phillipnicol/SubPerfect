@@ -4,10 +4,13 @@
 #ifndef MOVES_H_INCLUDED
 #define MOVES_H_INCLUDED
 
+enum PieceType {PAWN, ROOK, KNIGHT, BISHOP, QUEEN, KING, QUIET}; 
+
 //Move struct
 //origin and destination between 0 and 63
 struct Move {
     char origin, destination;
+    char aggressor, victim; 
 };
 
 namespace Moves {

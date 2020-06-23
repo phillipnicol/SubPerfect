@@ -1,11 +1,9 @@
 #include<iostream>
 #include<vector>
 #include<cstdint> 
-#include"position.h"
-#include"moves.h"
 #include"bithacks.h"
 #include"board.h" 
-
+#include"moves.h"
 
 uint64_t Moves::getRookPseudoLegal(char square, uint64_t blockers) {
     blockers &= RookMasks[square]; 

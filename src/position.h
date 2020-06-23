@@ -1,6 +1,4 @@
 #include<string>
-#include"board.h"
-#include"moves.h"
 
 #ifndef POSITION_H_INCLUDED
 #define POSITION_H_INCLUDED
