@@ -1,8 +1,10 @@
 #include<vector>
 #include<cstdint>
 
-#ifndef MOVES_H_INCLUDED
-#define MOVES_H_INCLUDED
+#include"piecetables.h"
+
+#ifndef PIECEMOVES_H_INCLUDED
+#define PIECEMOVES_H_INCLUDED
 
 enum PieceType {PAWN, ROOK, KNIGHT, BISHOP, QUEEN, KING, QUIET}; 
 
@@ -10,10 +12,10 @@ enum PieceType {PAWN, ROOK, KNIGHT, BISHOP, QUEEN, KING, QUIET};
 //origin and destination between 0 and 63
 struct Move {
     char origin, destination;
-    char aggressor, victim; 
+    int aggressor, victim; 
 };
 
-namespace Moves {
+namespace PieceMoves {
     uint64_t getRookPseudoLegal(char square, uint64_t blockers);
     uint64_t getBishopPseudoLegal(char square, uint64_t blockers); 
     uint64_t getQueenPseudoLegal(char square, uint64_t blockers);
