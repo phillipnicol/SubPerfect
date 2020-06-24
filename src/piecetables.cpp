@@ -11,6 +11,10 @@ std::vector<uint64_t> KingMasks(64,0);
 std::vector<std::vector<uint64_t> > BishopMagicBB(64, std::vector<uint64_t>()); 
 std::vector<std::vector<uint64_t> > RookMagicBB(64, std::vector<uint64_t>()); 
 
+std::vector<uint64_t> SlidingAttacks;
+uint32_t RookOffset[64];
+uint32_t BishopOffset[64]; 
+
 void PieceTables::init() {
     std::vector<std::vector<uint64_t> > Rays = makeRays();
     PieceTables::makeMasks(Rays);
@@ -19,6 +23,33 @@ void PieceTables::init() {
     PieceTables::fillRookMagicBB(Rays);
 
     PieceTables::makeKingMasks();
+}
+
+void PieceTables::fillSlidingAttacks(std::vector<std::vector<uint64_t> > &Rays) {
+    int ix = 0; 
+    //Do bishops first 
+    for(int i = 0; i < 64; ++i) {
+        BishopOffset[i] = ix;
+        for(int j = 0; j < (1 << BISHOP_ATTACK_BITS[i]); ++j) {
+            uint64_t blocker = getBlocker(j, BishopMasks[i]); 
+            uint64_t bishop_attack = getBishopAttacksFromBlocker(i, blocker, Rays);
+
+            SlidingAttacks.push_back(bishop_attack);
+            ++ix;             
+        }
+    }
+    //Do rooks next
+    for(int i = 0; i < 64; ++i) {
+        RookOffset[i] = ix;
+        for(int j = 0; j < (1 << ROOK_ATTACK_BITS[i]); ++j) {
+            uint64_t blocker = getBlocker(j, RookMasks[i]); 
+            uint64_t rook_attack = getRookAttacksFromBlocker(i, blocker, Rays); 
+            
+            SlidingAttacks.push_back(rook_attack);
+            ++ix; 
+        }
+    }
+    std::cout << ix; 
 }
 
 void PieceTables::fillBishopMagicBB(std::vector<std::vector<uint64_t> > &Rays) {

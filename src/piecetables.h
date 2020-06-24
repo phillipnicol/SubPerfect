@@ -16,6 +16,7 @@ namespace PieceTables {
     void makeMasks(std::vector<std::vector<uint64_t> > &Rays);
     void fillRookMagicBB(std::vector<std::vector<uint64_t> > &Rays);
 	void fillBishopMagicBB(std::vector<std::vector<uint64_t> > &Rays);
+	void fillSlidingAttacks(std::vector<std::vector<uint64_t> > &Rays);
 	void makeKingMasks();
 }
 
