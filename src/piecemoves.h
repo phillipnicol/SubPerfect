@@ -29,8 +29,24 @@ extern std::vector<uint64_t> BishopMasks;
 extern std::vector<uint64_t> RookMasks;
 extern std::vector<uint64_t> KingMasks; 
 
-extern std::vector<std::vector<uint64_t> > BishopMagicBB;
-extern std::vector<std::vector<uint64_t> > RookMagicBB;
+extern std::vector<uint64_t> SlidingAttacks;
+extern uint32_t RookOffset[64];
+extern uint32_t BishopOffset[64]; 
 
 
 #endif
+
+
+/*
+Code for magic bitboards (unused) 
+
+blockers &= RookMasks[square]; 
+
+uint64_t key = (blockers * ROOK_MAGICS[square]) >> (64 - ROOK_ATTACK_BITS[square]);
+return RookMagicBB[square][key]; 
+
+blockers &= BishopMasks[square];
+
+uint64_t key = (blockers * BISHOP_MAGICS[square]) >> (64 - BISHOP_ATTACK_BITS[square]);
+return BishopMagicBB[square][key]; 
+*/

@@ -4,17 +4,11 @@
 #include"piecemoves.h"
 
 uint64_t PieceMoves::getRookPseudoLegal(char square, uint64_t blockers) {
-    blockers &= RookMasks[square]; 
-
-    uint64_t key = (blockers * ROOK_MAGICS[square]) >> (64 - ROOK_ATTACK_BITS[square]);
-    return RookMagicBB[square][key]; 
+    return SlidingAttacks[RookOffset[square] + _pext_u64(blockers, RookMasks[square])];
 }
 
 uint64_t PieceMoves::getBishopPseudoLegal(char square, uint64_t blockers) {
-    blockers &= BishopMasks[square];
-
-    uint64_t key = (blockers * BISHOP_MAGICS[square]) >> (64 - BISHOP_ATTACK_BITS[square]);
-    return BishopMagicBB[square][key]; 
+    return SlidingAttacks[BishopOffset[square] + _pext_u64(blockers, BishopMasks[square])];
 }
 
 uint64_t PieceMoves::getQueenPseudoLegal(char square, uint64_t blockers) {

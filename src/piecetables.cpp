@@ -21,8 +21,10 @@ void PieceTables::init() {
 
     PieceTables::fillBishopMagicBB(Rays);   
     PieceTables::fillRookMagicBB(Rays);
+    PieceTables::fillSlidingAttacks(Rays);
 
     PieceTables::makeKingMasks();
+    
 }
 
 void PieceTables::fillSlidingAttacks(std::vector<std::vector<uint64_t> > &Rays) {
