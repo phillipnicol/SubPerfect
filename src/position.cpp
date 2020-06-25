@@ -5,8 +5,6 @@
 #include<iostream>
 #include"position.h"
 
-
-
 void Position::setFEN(std::string FEN) {
     //Zero out all the bitboards
     Pieces[WHITE].pawn = 0ULL; Pieces[WHITE].rook = 0ULL; Pieces[WHITE].knight = 0ULL;

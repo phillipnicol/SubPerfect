@@ -56,6 +56,11 @@ inline bool squareAttacked(int square, uint64_t blockers, Board enemy) {
     return false; 
 }
 
+inline uint64_t xrayRookAttacks(int square, uint64_t all, uint64_t friendly) {
+    uint64_t rook_attacks = getRookPseudoLegal(square, all);
+    friendly &= rook_attacks;
+    return rook_attacks ^ getRookPseudoLegal(square, all ^ friendly); 
+}
 
 #endif
 

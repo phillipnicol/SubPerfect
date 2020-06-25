@@ -14,8 +14,6 @@ uint64_t Perft::Perft(std::string FEN, int depth, bool verbose) {
     auto stop = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> duration = stop - start;
 
-    std::cout << duration.count() << std::endl;
-
     double nps = 1000*(nodes/duration.count());
 
     if(verbose) {

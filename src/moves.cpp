@@ -9,13 +9,17 @@ std::vector<Move> Moves::generateMoves(Position pos) {
     if(pos.isinCheck()) {
         //Generate evasions
         kingMoves(_tzcnt_u64(pos.Pieces[pos.color].king), friendly, moves);
-        rookMoves(pos.Pieces[pos.color].rook, friendly, all, moves); 
+        queenMoves(pos.Pieces[pos.color].queen, friendly, all, moves);
+        rookMoves(pos.Pieces[pos.color].rook, friendly, all, moves);
+        bishopMoves(pos.Pieces[pos.color].bishop, friendly, all, moves); 
     }
     else {
         //Generate non-evasions 
 
         kingMoves(_tzcnt_u64(pos.Pieces[pos.color].king), friendly, moves);
+        queenMoves(pos.Pieces[pos.color].queen, friendly, all, moves);
         rookMoves(pos.Pieces[pos.color].rook, friendly, all, moves); 
+        bishopMoves(pos.Pieces[pos.color].bishop, friendly, all, moves);
     }
 
     return moves; 
@@ -78,7 +82,7 @@ void Moves::makeMove(Position &pos, Move &move) {
     //update game metadata 
     if(pos.color == BLACK) {++pos.fullmove_number;} //update move number
     pos.color = !pos.color; //switch color
-    if(move.victim != QUIET | move.aggressor == PAWN) {
+    if(move.victim != QUIET || move.aggressor == PAWN) {
         pos.halfmove_clock = 0; 
     } //for 50 move draw
 }
@@ -87,7 +91,7 @@ void Moves::unmakeMove(Position &pos, Move move) {
     //Update game metadata
     if(pos.color == WHITE) {--pos.fullmove_number;}
     pos.color = !pos.color;
-    if(move.victim == QUIET & move.aggressor != PAWN) {
+    if(move.victim == QUIET && move.aggressor != PAWN) {
         --pos.halfmove_clock;
     }
 
@@ -105,8 +109,12 @@ void Moves::unmakeMove(Position &pos, Move move) {
         case KNIGHT: 
             break;
         case BISHOP:
+            pos.Pieces[!pos.color].bishop |= dest;
+            pos.Pieces[!pos.color].all |= dest;
             break;
         case QUEEN:
+            pos.Pieces[!pos.color].queen |= dest;
+            pos.Pieces[!pos.color].all |= dest;
             break;
     }
 
@@ -119,8 +127,14 @@ void Moves::unmakeMove(Position &pos, Move move) {
             pos.Pieces[pos.color].rook &= dest; 
             break;
         case KNIGHT: break;
-        case BISHOP: break;
-        case QUEEN: break;
+        case BISHOP: 
+            pos.Pieces[pos.color].bishop |= orig;
+            pos.Pieces[pos.color].bishop &= dest; 
+            break;
+        case QUEEN: 
+            pos.Pieces[pos.color].queen |= orig;
+            pos.Pieces[pos.color].queen &= dest;         
+            break;
         case KING: 
             pos.Pieces[pos.color].king |= orig; 
             pos.Pieces[pos.color].king &= dest; 
@@ -143,6 +157,38 @@ void kingMoves(int king_loc, uint64_t friendly, std::vector<Move> &moves) {
     }
 }
 
+void queenMoves(uint64_t queen_loc, uint64_t friendly, uint64_t all_pieces, std::vector<Move> &moves) {
+    Move move; 
+    move.aggressor = QUEEN; 
+    while(queen_loc) {
+        move.origin = _tzcnt_u64(queen_loc);
+        uint64_t queen_attacks = getQueenPseudoLegal(move.origin, all_pieces);
+        queen_attacks &= ~friendly;
+        while(queen_attacks) {
+            move.destination = _tzcnt_u64(queen_attacks);
+            moves.push_back(move);
+            queen_attacks &= (queen_attacks-1);
+        }
+        queen_loc &= (queen_loc-1); 
+    }
+}
+
+void bishopMoves(uint64_t bishop_loc, uint64_t friendly, uint64_t all_pieces, std::vector<Move> &moves) {
+    Move move;
+    move.aggressor = BISHOP;
+    while(bishop_loc) {
+        move.origin = _tzcnt_u64(bishop_loc);
+        uint64_t bishop_attacks = getBishopPseudoLegal(move.origin, all_pieces);
+        bishop_attacks &= ~friendly;
+        while(bishop_attacks) {
+            move.destination = _tzcnt_u64(bishop_attacks);
+            moves.push_back(move);
+            bishop_attacks &= (bishop_attacks-1); 
+        }
+        bishop_loc &= (bishop_loc-1);
+    }
+}
+
 void rookMoves(uint64_t rook_loc, uint64_t friendly, uint64_t all_pieces, std::vector<Move> &moves) {
     Move move;
     move.aggressor = ROOK; 
@@ -153,9 +199,8 @@ void rookMoves(uint64_t rook_loc, uint64_t friendly, uint64_t all_pieces, std::v
         while(rook_attacks) {
             move.destination = _tzcnt_u64(rook_attacks); 
             moves.push_back(move); 
-            
-            rook_attacks &= (rook_attacks - 1);
+            rook_attacks &= (rook_attacks-1); 
         }
-        rook_loc &= (rook_loc - 1);
+        rook_loc &= (rook_loc-1);
     }
 }

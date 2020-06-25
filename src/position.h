@@ -28,11 +28,6 @@ class Position {
 
         //output the position 
         void printPosition();
-    
-    private:
-        uint64_t all_pieces; 
-        uint64_t pinned; 
-        uint64_t piece_evasions; 
 };
 
 inline bool Position::isinCheck() {
@@ -47,10 +42,12 @@ inline bool Position::isLegal(Move move) {
 
     Board mycopy = Pieces[color]; 
     switch(move.aggressor) {
+        case PAWN: break;
         case ROOK:
             mycopy.rook &= orig;
             mycopy.rook |= dest; 
             break;
+        case KNIGHT: break; 
         case BISHOP:
             mycopy.bishop &= orig;
             mycopy.bishop |= dest; 
