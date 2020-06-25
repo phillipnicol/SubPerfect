@@ -9,37 +9,73 @@ enum Color {WHITE, BLACK};
 class Position {
     public:
         //Piece bitboards 
-        Board Pieces[2]; 
+        Board Pieces[2]; // 0 is white bitboards while 1 is black 
 
         //general game information
-        bool color; 
+        bool color; // 0 is white while 1 is black 
         bool castling[4];
         char en_passant_target; //will be 65 if no en passant target 
         int halfmove_clock; //For 50 move draws
         int fullmove_number; 
-        bool incheck; 
+        bool incheck; // is the side to move in check 
 
         //Public member functions
-        //Find the list of legal moves 
-        std::vector<Move> getMoves();
+        bool isinCheck(); 
+        bool isLegal(Move move); 
 
         //set up position
         void setFEN(std::string FEN); 
 
-        //print board to terminal
+        //output the position 
         void printPosition();
     
     private:
         uint64_t all_pieces; 
         uint64_t pinned; 
         uint64_t piece_evasions; 
-
-        //Private member functions  
-        void getRookMoves(std::vector<Move> &Moves); 
-        void getBishopMoves(std::vector<Move> &Moves); 
-        void getQueenMoves(std::vector<Move> &Moves);
-        int getKingMoves(std::vector<Move> &Moves); 
 };
+
+inline bool Position::isinCheck() {
+    int king_loc = _tzcnt_u64(Pieces[color].king);
+    incheck = squareAttacked(king_loc, Pieces[color].all | Pieces[!color].all, Pieces[!color]);
+    return incheck; 
+}
+
+inline bool Position::isLegal(Move move) {
+    uint64_t dest = 1ULL << move.destination;  
+    uint64_t orig = ~(1ULL << move.origin);
+
+    Board mycopy = Pieces[color]; 
+    switch(move.aggressor) {
+        case ROOK:
+            mycopy.rook &= orig;
+            mycopy.rook |= dest; 
+            break;
+        case BISHOP:
+            mycopy.bishop &= orig;
+            mycopy.bishop |= dest; 
+            break;
+        case QUEEN:
+            mycopy.queen &= orig;
+            mycopy.queen |= dest; 
+            break;
+        case KING:
+            mycopy.king &= orig;
+            mycopy.king |= dest; 
+            break;         
+    }
+    mycopy.all &= orig; mycopy.all |= dest; 
+
+    //enemy
+    dest = ~dest; 
+    Board enemycopy = Pieces[!color];
+    enemycopy.all &= dest;
+    enemycopy.pawn &= dest; enemycopy.rook &= dest; enemycopy.knight &= dest; 
+    enemycopy.bishop &= dest; enemycopy.queen &= dest;
+
+    int king_loc = _tzcnt_u64(mycopy.king); 
+    return !squareAttacked(king_loc, mycopy.all | enemycopy.all, enemycopy); 
+}
 
 //starting position 
 const std::string STARTING_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";

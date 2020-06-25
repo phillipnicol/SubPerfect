@@ -19,8 +19,6 @@ void PieceTables::init() {
     std::vector<std::vector<uint64_t> > Rays = makeRays();
     PieceTables::makeMasks(Rays);
 
-    PieceTables::fillBishopMagicBB(Rays);   
-    PieceTables::fillRookMagicBB(Rays);
     PieceTables::fillSlidingAttacks(Rays);
 
     PieceTables::makeKingMasks();
@@ -51,7 +49,6 @@ void PieceTables::fillSlidingAttacks(std::vector<std::vector<uint64_t> > &Rays) 
             ++ix; 
         }
     }
-    std::cout << ix; 
 }
 
 void PieceTables::fillBishopMagicBB(std::vector<std::vector<uint64_t> > &Rays) {

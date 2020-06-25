@@ -14,8 +14,8 @@ uint64_t getBishopAttacksFromBlocker(int square, uint64_t blocker, std::vector<s
 namespace PieceTables {
     void init();
     void makeMasks(std::vector<std::vector<uint64_t> > &Rays);
-    void fillRookMagicBB(std::vector<std::vector<uint64_t> > &Rays);
 	void fillBishopMagicBB(std::vector<std::vector<uint64_t> > &Rays);
+	void fillRookMagicBB(std::vector<std::vector<uint64_t> > &Rays);
 	void fillSlidingAttacks(std::vector<std::vector<uint64_t> > &Rays);
 	void makeKingMasks();
 }

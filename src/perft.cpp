@@ -14,6 +14,8 @@ uint64_t Perft::Perft(std::string FEN, int depth, bool verbose) {
     auto stop = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> duration = stop - start;
 
+    std::cout << duration.count() << std::endl;
+
     double nps = 1000*(nodes/duration.count());
 
     if(verbose) {
@@ -29,17 +31,22 @@ uint64_t Perft::Perft(std::string FEN, int depth, bool verbose) {
 
 uint64_t Perft::PerftMain(Position pos, int depth) {
     uint64_t nodes = 0;
-
-    std::vector<Move> moves = pos.getMoves(); 
+    std::vector<Move> moves = Moves::generateMoves(pos);  
 
     if(depth == 1) {
-        return moves.size();
+        for(auto move : moves) {
+            if(pos.isLegal(move)) {
+                ++nodes;
+            }
+        }
+        return nodes; 
     }
-
     for(auto move : moves) {
-        Position oldpos = Moves::makeMove(pos, move);
-        nodes += Perft::PerftMain(pos, depth - 1);
-        pos = oldpos;
+        if(pos.isLegal(move)) {
+            Moves::makeMove(pos, move);
+            nodes += Perft::PerftMain(pos, depth - 1);
+            Moves::unmakeMove(pos, move);         
+        }
     }
     return nodes; 
 }

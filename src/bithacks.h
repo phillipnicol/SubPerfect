@@ -1,5 +1,6 @@
 #include<cstdint>
 #include<x86intrin.h>
+#include<iostream>
 
 #ifndef BITHACKS_H_INCLUDED
 #define BITHACKS_H_INCLUDED
