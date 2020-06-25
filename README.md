@@ -1,2 +1,2 @@
 [![Build Status](https://travis-ci.org/phillipnicol/SubPerfect.svg?branch=master)](https://travis-ci.org/phillipnicol/SubPerfect)
-# SubPerfect
+# SubPerfect 0.0.0.dev 64 BMI2 

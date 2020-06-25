@@ -2,7 +2,7 @@
 #include<cstdint>
 #include<iostream>
 #include<algorithm> 
-#include"bithacks.h"
+#include"piecetables.h"
 
 std::vector<uint64_t> BishopMasks(64,0);
 std::vector<uint64_t> RookMasks(64,0);
@@ -11,71 +11,83 @@ std::vector<uint64_t> KingMasks(64,0);
 std::vector<std::vector<uint64_t> > BishopMagicBB(64, std::vector<uint64_t>()); 
 std::vector<std::vector<uint64_t> > RookMagicBB(64, std::vector<uint64_t>()); 
 
-void BitHacks::init() {
+std::vector<uint64_t> SlidingAttacks;
+uint32_t RookOffset[64];
+uint32_t BishopOffset[64]; 
+
+void PieceTables::init() {
     std::vector<std::vector<uint64_t> > Rays = makeRays();
-    BitHacks::makeMasks(Rays);
+    PieceTables::makeMasks(Rays);
 
-    BitHacks::fillBishopMagicBB(Rays);   
-    BitHacks::fillRookMagicBB(Rays);
+    PieceTables::fillSlidingAttacks(Rays);
 
-    BitHacks::makeKingMasks();
+    PieceTables::makeKingMasks();
+    
 }
 
-//serialize returns a vector of char consisting of the activated squares in a given bitboard
-//Taken from chess programming wiki 
-std::vector<char> BitHacks::serialize(uint64_t bitboard) {
-    std::vector<char> squares; 
-
-    while(bitboard) {
-        //isolate lowest set bit
-        uint64_t lsb = bitboard & -bitboard;
-
-        //map to square 
-        //__builtin_ctzl for g++ counts the number of leading zeros on the power of two found above
-        squares.push_back(__builtin_ctzl(lsb));
-
-        bitboard &= bitboard-1;
-    }
-    return squares;
-}
-
-void BitHacks::fillBishopMagicBB(std::vector<std::vector<uint64_t> > &Rays) {
-    //Ensure that the vector is initialized with all 0's    
+void PieceTables::fillSlidingAttacks(std::vector<std::vector<uint64_t> > &Rays) {
+    int ix = 0; 
+    //Do bishops first 
     for(int i = 0; i < 64; ++i) {
-        BishopMagicBB[i].clear();
-        BishopMagicBB[i] = std::vector<uint64_t> ((1 << BishopAttackBits[i]), 0); 
-
-        for(int j = 0; j < (1 << BishopAttackBits[i]); ++j) {
+        BishopOffset[i] = ix;
+        for(int j = 0; j < (1 << BISHOP_ATTACK_BITS[i]); ++j) {
             uint64_t blocker = getBlocker(j, BishopMasks[i]); 
             uint64_t bishop_attack = getBishopAttacksFromBlocker(i, blocker, Rays);
 
-            uint64_t index_mapping = blocker * BishopMagics[i];
+            SlidingAttacks.push_back(bishop_attack);
+            ++ix;             
+        }
+    }
+    //Do rooks next
+    for(int i = 0; i < 64; ++i) {
+        RookOffset[i] = ix;
+        for(int j = 0; j < (1 << ROOK_ATTACK_BITS[i]); ++j) {
+            uint64_t blocker = getBlocker(j, RookMasks[i]); 
+            uint64_t rook_attack = getRookAttacksFromBlocker(i, blocker, Rays); 
+            
+            SlidingAttacks.push_back(rook_attack);
+            ++ix; 
+        }
+    }
+}
+
+void PieceTables::fillBishopMagicBB(std::vector<std::vector<uint64_t> > &Rays) {
+    //Ensure that the vector is initialized with all 0's    
+    for(int i = 0; i < 64; ++i) {
+        BishopMagicBB[i].clear();
+        BishopMagicBB[i] = std::vector<uint64_t> ((1 << BISHOP_ATTACK_BITS[i]), 0); 
+
+        for(int j = 0; j < (1 << BISHOP_ATTACK_BITS[i]); ++j) {
+            uint64_t blocker = getBlocker(j, BishopMasks[i]); 
+            uint64_t bishop_attack = getBishopAttacksFromBlocker(i, blocker, Rays);
+
+            uint64_t index_mapping = blocker * BISHOP_MAGICS[i];
             //Get key by shifting back
-            uint64_t key = index_mapping >> (64 - BishopAttackBits[i]); 
+            uint64_t key = index_mapping >> (64 - BISHOP_ATTACK_BITS[i]); 
             BishopMagicBB[i][key] = bishop_attack; 
         }
     }
 }
 
-void BitHacks::fillRookMagicBB(std::vector<std::vector<uint64_t> > &Rays) {
+void PieceTables::fillRookMagicBB(std::vector<std::vector<uint64_t> > &Rays) {
     //Ensure that the vector is initialized with all 0's 
     for(int i = 0; i < 64; ++i) {
         RookMagicBB[i].clear(); 
-        RookMagicBB[i] = std::vector<uint64_t> ((1 << RookAttackBits[i]), 0); 
+        RookMagicBB[i] = std::vector<uint64_t> ((1 << ROOK_ATTACK_BITS[i]), 0); 
 
-        for(int j = 0; j < (1 << RookAttackBits[i]); ++j) {
+        for(int j = 0; j < (1 << ROOK_ATTACK_BITS[i]); ++j) {
             uint64_t blocker = getBlocker(j, RookMasks[i]); 
             uint64_t rook_attack = getRookAttacksFromBlocker(i, blocker, Rays); 
             
-            uint64_t index_mapping = blocker * RookMagics[i]; 
+            uint64_t index_mapping = blocker * ROOK_MAGICS[i]; 
             //Get key by shifting back
-            uint64_t key = index_mapping >> (64 - RookAttackBits[i]); 
+            uint64_t key = index_mapping >> (64 - ROOK_ATTACK_BITS[i]); 
             RookMagicBB[i][key] = rook_attack; 
         }
     }
 }
 
-void BitHacks::makeMasks(std::vector<std::vector<uint64_t> > &Rays) {
+void PieceTables::makeMasks(std::vector<std::vector<uint64_t> > &Rays) {
     uint64_t edgesquares = FILE_A | FILE_H | RANK_1 | RANK_8;     
     for(int i = 0; i < 64; ++i) {
         BishopMasks[i] = (Rays[NE][i] | Rays[SE][i] | Rays[SW][i] | Rays[NW][i]) & ~edgesquares; 
@@ -83,7 +95,7 @@ void BitHacks::makeMasks(std::vector<std::vector<uint64_t> > &Rays) {
     }
 }
 
-void BitHacks::makeKingMasks() {
+void PieceTables::makeKingMasks() {
     for(int i = 0; i < 64; ++i) {
         uint64_t pos = 1ULL << i;
         if((pos & FILE_A) != 0) {
@@ -99,21 +111,6 @@ void BitHacks::makeKingMasks() {
             KingMasks[i] |= (pos >> 7) | (pos << 9) | (pos << 1);
             KingMasks[i] |= (pos << 8) | (pos >> 8);            
         }
-    }
-}
-
-void BitHacks::printBitBoard(uint64_t BB) {
-    //print it in a way that looks correct
-    for(int i = 56; i >= 0; i -= 8) {
-        for(int j = i; j < i + 8; ++j) {
-            if(BB & (1ULL << j)) {
-                std::cout << 1 << " ";
-            }
-            else {
-                std::cout << 0 << " ";
-            }
-        }
-        std::cout << "\n";
     }
 }
 
@@ -200,7 +197,7 @@ std::vector<std::vector<uint64_t> > makeRays() {
 
 uint64_t getBlocker(int index, uint64_t mask) {
     uint64_t blocker = 0ULL;
-    std::vector<char> on_bits = BitHacks::serialize(mask);
+    std::vector<char> on_bits = serialize(mask);
     for(int i = 0; i < on_bits.size(); ++i) {
         if(index & (1 << i)) {
             blocker += 1ULL << on_bits[i];
@@ -213,7 +210,7 @@ uint64_t getBishopAttacksFromBlocker(int square, uint64_t blocker, std::vector<s
     //Do each direction 
     //NE
     uint64_t ne_attack = Rays[NE][square]; 
-    std::vector<char> on_bits = BitHacks::serialize(blocker & Rays[NE][square]); 
+    std::vector<char> on_bits = serialize(blocker & Rays[NE][square]); 
     std::vector<char>::iterator c; 
     if(on_bits.size() > 0) {
         c = std::min_element(on_bits.begin(), on_bits.end());
@@ -222,7 +219,7 @@ uint64_t getBishopAttacksFromBlocker(int square, uint64_t blocker, std::vector<s
 
     //SE  
     uint64_t se_attack = Rays[SE][square]; 
-    on_bits = BitHacks::serialize(blocker & Rays[SE][square]); 
+    on_bits = serialize(blocker & Rays[SE][square]); 
     if(on_bits.size() > 0) {
         c = std::max_element(on_bits.begin(), on_bits.end());
         se_attack &= (Rays[NW][*c] | (1ULL << *c)); 
@@ -230,7 +227,7 @@ uint64_t getBishopAttacksFromBlocker(int square, uint64_t blocker, std::vector<s
 
     //SW 
     uint64_t sw_attack = Rays[SW][square]; 
-    on_bits = BitHacks::serialize(blocker & Rays[SW][square]); 
+    on_bits = serialize(blocker & Rays[SW][square]); 
     if(on_bits.size() > 0) {
         c = std::max_element(on_bits.begin(), on_bits.end());
         sw_attack &= (Rays[NE][*c] | (1ULL << *c));        
@@ -238,7 +235,7 @@ uint64_t getBishopAttacksFromBlocker(int square, uint64_t blocker, std::vector<s
 
     //NW
     uint64_t nw_attack = Rays[NW][square]; 
-    on_bits = BitHacks::serialize(blocker & Rays[NW][square]); 
+    on_bits = serialize(blocker & Rays[NW][square]); 
     if(on_bits.size() > 0) {
         c = std::min_element(on_bits.begin(), on_bits.end());
         nw_attack &= (Rays[SE][*c] | (1ULL << *c));         
@@ -251,7 +248,7 @@ uint64_t getRookAttacksFromBlocker(int square, uint64_t blocker, std::vector<std
     //Do each direction 
     //North 
     uint64_t north_attack = Rays[N][square]; 
-    std::vector<char> on_bits = BitHacks::serialize(blocker & Rays[N][square]); 
+    std::vector<char> on_bits = serialize(blocker & Rays[N][square]); 
     std::vector<char>::iterator c; 
     if(on_bits.size() > 0) {
         c = std::min_element(on_bits.begin(), on_bits.end());
@@ -260,7 +257,7 @@ uint64_t getRookAttacksFromBlocker(int square, uint64_t blocker, std::vector<std
 
     //East 
     uint64_t east_attack = Rays[E][square]; 
-    on_bits = BitHacks::serialize(blocker & Rays[E][square]); 
+    on_bits = serialize(blocker & Rays[E][square]); 
     if(on_bits.size() > 0) {
         c = std::min_element(on_bits.begin(), on_bits.end());
         east_attack &= (Rays[W][*c] | (1ULL << *c)); 
@@ -268,7 +265,7 @@ uint64_t getRookAttacksFromBlocker(int square, uint64_t blocker, std::vector<std
 
     //South 
     uint64_t south_attack = Rays[S][square]; 
-    on_bits = BitHacks::serialize(blocker & Rays[S][square]); 
+    on_bits = serialize(blocker & Rays[S][square]); 
     if(on_bits.size() > 0) {
         c = std::max_element(on_bits.begin(), on_bits.end());
         south_attack &= (Rays[N][*c] | (1ULL << *c));        
@@ -276,7 +273,7 @@ uint64_t getRookAttacksFromBlocker(int square, uint64_t blocker, std::vector<std
 
     //West
     uint64_t west_attack = Rays[W][square]; 
-    on_bits = BitHacks::serialize(blocker & Rays[W][square]); 
+    on_bits = serialize(blocker & Rays[W][square]); 
     if(on_bits.size() > 0) {
         c = std::max_element(on_bits.begin(), on_bits.end());
         west_attack &= (Rays[E][*c] | (1ULL << *c));         

@@ -1,85 +1,161 @@
 #include<iostream>
-#include<vector>
-#include<cstdint> 
-#include"position.h"
 #include"moves.h"
-#include"bithacks.h"
-#include"board.h" 
 
+std::vector<Move> Moves::generateMoves(Position pos) {
+    std::vector<Move> moves;
+    uint64_t all = pos.Pieces[pos.color].all | pos.Pieces[!pos.color].all; 
+    uint64_t friendly = pos.Pieces[pos.color].all; 
 
-uint64_t Moves::getRookPseudoLegal(char square, uint64_t blockers) {
-    blockers &= RookMasks[square]; 
+    if(pos.isinCheck()) {
+        //Generate evasions
+        kingMoves(_tzcnt_u64(pos.Pieces[pos.color].king), friendly, moves);
+        rookMoves(pos.Pieces[pos.color].rook, friendly, all, moves); 
+    }
+    else {
+        //Generate non-evasions 
 
-    uint64_t key = (blockers * RookMagics[square]) >> (64 - RookAttackBits[square]);
-    return RookMagicBB[square][key]; 
+        kingMoves(_tzcnt_u64(pos.Pieces[pos.color].king), friendly, moves);
+        rookMoves(pos.Pieces[pos.color].rook, friendly, all, moves); 
+    }
+
+    return moves; 
 }
 
-uint64_t Moves::getBishopPseudoLegal(char square, uint64_t blockers) {
-    blockers &= BishopMasks[square];
+void Moves::makeMove(Position &pos, Move &move) {
+    //find which piece is to be moved 
+    //place on desired square 
+    uint64_t dest = 1ULL << move.destination;  
+    uint64_t orig = ~(1ULL << move.origin);
 
-    uint64_t key = (blockers * BishopMagics[square]) >> (64 - BishopAttackBits[square]);
-    return BishopMagicBB[square][key]; 
+    switch(move.aggressor) {
+        case ROOK:
+            pos.Pieces[pos.color].rook &= orig;
+            pos.Pieces[pos.color].rook |= dest; 
+            break;
+        case BISHOP:
+            pos.Pieces[pos.color].bishop &= orig;
+            pos.Pieces[pos.color].bishop |= dest; 
+            break;
+        case QUEEN:
+            pos.Pieces[pos.color].queen &= orig;
+            pos.Pieces[pos.color].queen |= dest; 
+            break;
+        case KING:
+            pos.Pieces[pos.color].king &= orig;
+            pos.Pieces[pos.color].king |= dest; 
+            break; 
+    }
+    pos.Pieces[pos.color].all &= orig; pos.Pieces[pos.color].all |= dest;
+
+    //Get victim
+    if(dest & pos.Pieces[!pos.color].all) { 
+        pos.Pieces[!pos.color].all &= ~dest; 
+        if((dest & pos.Pieces[!pos.color].pawn) != 0) {
+            move.victim = PAWN; 
+            pos.Pieces[!pos.color].pawn &= ~dest; 
+        }
+        else if((dest & pos.Pieces[!pos.color].rook) != 0) {
+            move.victim = ROOK; 
+            pos.Pieces[!pos.color].rook &= ~dest; 
+        }
+        else if((dest & pos.Pieces[!pos.color].knight) != 0) {
+            move.victim = KNIGHT; 
+            pos.Pieces[!pos.color].knight &= ~dest; 
+        }
+        else if((dest & pos.Pieces[!pos.color].bishop) != 0) {
+            move.victim = BISHOP; 
+            pos.Pieces[!pos.color].bishop &= ~dest; 
+        }
+        else {
+            move.victim = QUEEN; 
+            pos.Pieces[!pos.color].queen &= ~dest; 
+        }
+    }
+    else {
+        move.victim = QUIET; 
+    }
+
+    //update game metadata 
+    if(pos.color == BLACK) {++pos.fullmove_number;} //update move number
+    pos.color = !pos.color; //switch color
+    if(move.victim != QUIET | move.aggressor == PAWN) {
+        pos.halfmove_clock = 0; 
+    } //for 50 move draw
 }
 
-uint64_t Moves::getQueenPseudoLegal(char square, uint64_t blockers) {
-    return (Moves::getBishopPseudoLegal(square, blockers) | Moves::getRookPseudoLegal(square, blockers));
+void Moves::unmakeMove(Position &pos, Move move) {
+    //Update game metadata
+    if(pos.color == WHITE) {--pos.fullmove_number;}
+    pos.color = !pos.color;
+    if(move.victim == QUIET & move.aggressor != PAWN) {
+        --pos.halfmove_clock;
+    }
+
+    uint64_t orig = 1ULL << move.origin; 
+    uint64_t dest = 1ULL << move.destination; 
+    //Put victim back on board 
+    switch(move.victim) {
+        case QUIET: break;
+        case PAWN:
+            break;
+        case ROOK: 
+            pos.Pieces[!pos.color].rook |= dest; 
+            pos.Pieces[!pos.color].all |= dest;
+            break;
+        case KNIGHT: 
+            break;
+        case BISHOP:
+            break;
+        case QUEEN:
+            break;
+    }
+
+    dest = ~dest; 
+    //Put agressor back in correct spot 
+    switch(move.aggressor) {
+        case PAWN: break;
+        case ROOK: 
+            pos.Pieces[pos.color].rook |= orig;
+            pos.Pieces[pos.color].rook &= dest; 
+            break;
+        case KNIGHT: break;
+        case BISHOP: break;
+        case QUEEN: break;
+        case KING: 
+            pos.Pieces[pos.color].king |= orig; 
+            pos.Pieces[pos.color].king &= dest; 
+            break;
+    }
+    pos.Pieces[pos.color].all &= dest; pos.Pieces[pos.color].all |= orig;
 }
 
-uint64_t Moves::getKingPseudoLegal(char square) {
-    return KingMasks[square]; 
+void kingMoves(int king_loc, uint64_t friendly, std::vector<Move> &moves) {
+    uint64_t king_attacks = getKingPseudoLegal(king_loc);
+    king_attacks &= ~friendly; 
+    Move move;
+    move.origin = king_loc;
+    move.aggressor = KING; 
+    while(king_attacks) {
+        move.destination = _tzcnt_u64(king_attacks); 
+        moves.push_back(move);
+
+        king_attacks &= (king_attacks - 1); 
+    }
 }
 
-uint64_t Moves::findPinnedPieces(Board Friendly, Board Enemy, uint64_t all_pieces) {
-    uint64_t pinned = 0ULL;
-    //If no king, simply return nothing
-    if(Friendly.king == 0ULL) {return pinned;}
-
-    //First we get moves from the opponent's sliding pieces 
-    std::vector<char> rooks = BitHacks::serialize(Enemy.rook);
-    std::vector<char> bishops = BitHacks::serialize(Enemy.bishop);
-    std::vector<char> queens = BitHacks::serialize(Enemy.queen); 
-    //diagonal
-    uint64_t enemy_diagonals = 0ULL;
-    for(int i = 0; i < bishops.size(); ++i) {
-        enemy_diagonals |= Moves::getBishopPseudoLegal(bishops[i], all_pieces);
+void rookMoves(uint64_t rook_loc, uint64_t friendly, uint64_t all_pieces, std::vector<Move> &moves) {
+    Move move;
+    move.aggressor = ROOK; 
+    while(rook_loc) {
+        move.origin = _tzcnt_u64(rook_loc);
+        uint64_t rook_attacks = getRookPseudoLegal(move.origin, all_pieces);
+        rook_attacks &= ~friendly; 
+        while(rook_attacks) {
+            move.destination = _tzcnt_u64(rook_attacks); 
+            moves.push_back(move); 
+            
+            rook_attacks &= (rook_attacks - 1);
+        }
+        rook_loc &= (rook_loc - 1);
     }
-    for(int i = 0; i < queens.size(); ++i) {
-        enemy_diagonals |= Moves::getBishopPseudoLegal(queens[i], all_pieces);
-    }
-    enemy_diagonals &= ~Enemy.all;
-
-    //straights
-    uint64_t enemy_straights = 0ULL;
-    for(int i = 0; i < rooks.size(); ++i) {
-        enemy_straights |= Moves::getRookPseudoLegal(rooks[i], all_pieces);
-    }
-    for(int i = 0; i < queens.size(); ++i) {
-        enemy_straights |= Moves::getRookPseudoLegal(rooks[i], all_pieces); 
-    }
-    enemy_straights &= ~Enemy.all; 
-
-    //Now get sliding attacks from the king
-    char king_location = __builtin_ctzl(Friendly.king);
-    uint64_t kingrays_diagonal = Moves::getBishopPseudoLegal(king_location, all_pieces);
-    uint64_t kingrays_straight = Moves::getRookPseudoLegal(king_location, all_pieces);  
-
-    //Now we combine this information 
-    pinned = (kingrays_diagonal & enemy_diagonals) | (kingrays_straight & enemy_straights);
-    return pinned;
-}
-
-uint64_t Moves::getPinnedMoves(char square, uint64_t friendly_king, Board Enemy, uint64_t all_pieces) {
-    //Remove pinned piece from the board 
-    all_pieces &= ~(1ULL << square); 
-
-    char king_location = __builtin_ctzl(friendly_king); 
-    //First see if the pinning piece is diagonally moving 
-    uint64_t kingrays_diagonal = Moves::getBishopPseudoLegal(king_location, all_pieces);
-    if((kingrays_diagonal & (1ULL << square)) != 0) {
-        //the pin is diagonal 
-        uint64_t pinned_diagonal = Moves::getBishopPseudoLegal(square, all_pieces);
-        return (kingrays_diagonal & pinned_diagonal); 
-    }
-    //Otherwise it is a straight moving piece
-    return (Moves::getRookPseudoLegal(king_location, all_pieces) & Moves::getRookPseudoLegal(square, all_pieces));
 }
