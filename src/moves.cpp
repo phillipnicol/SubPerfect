@@ -1,25 +1,27 @@
 #include<iostream>
 #include"moves.h"
 
-std::vector<Move> Moves::generateMoves(Position pos) {
+std::vector<Move> Moves::generateMoves(Position &pos) {
     std::vector<Move> moves;
-    uint64_t all = pos.Pieces[pos.color].all | pos.Pieces[!pos.color].all; 
-    uint64_t friendly = pos.Pieces[pos.color].all; 
+    pos.all = pos.Pieces[pos.color].all | pos.Pieces[!pos.color].all; 
+    pos.kingsq = _tzcnt_u64(pos.Pieces[pos.color].king);
+
+    pos.pinned = getPinned(pos); 
 
     if(pos.isinCheck()) {
         //Generate evasions
-        kingMoves(_tzcnt_u64(pos.Pieces[pos.color].king), friendly, moves);
-        queenMoves(pos.Pieces[pos.color].queen, friendly, all, moves);
-        rookMoves(pos.Pieces[pos.color].rook, friendly, all, moves);
-        bishopMoves(pos.Pieces[pos.color].bishop, friendly, all, moves); 
+        kingMoves(pos, moves);
+        queenMoves(pos, moves);
+        rookMoves(pos, moves);
+        bishopMoves(pos, moves); 
     }
     else {
         //Generate non-evasions 
 
-        kingMoves(_tzcnt_u64(pos.Pieces[pos.color].king), friendly, moves);
-        queenMoves(pos.Pieces[pos.color].queen, friendly, all, moves);
-        rookMoves(pos.Pieces[pos.color].rook, friendly, all, moves); 
-        bishopMoves(pos.Pieces[pos.color].bishop, friendly, all, moves);
+        kingMoves(pos, moves); 
+        queenMoves(pos, moves);
+        rookMoves(pos, moves); 
+        bishopMoves(pos, moves);
     }
 
     return moves; 
@@ -143,64 +145,119 @@ void Moves::unmakeMove(Position &pos, Move move) {
     pos.Pieces[pos.color].all &= dest; pos.Pieces[pos.color].all |= orig;
 }
 
-void kingMoves(int king_loc, uint64_t friendly, std::vector<Move> &moves) {
-    uint64_t king_attacks = getKingPseudoLegal(king_loc);
-    king_attacks &= ~friendly; 
+void kingMoves(Position &pos, std::vector<Move> &moves) {
+    uint64_t king_attacks = getKingPseudoLegal(pos.kingsq);
+    king_attacks &= ~pos.Pieces[pos.color].all;
     Move move;
-    move.origin = king_loc;
-    move.aggressor = KING; 
+    move.origin = pos.kingsq;
+    move.aggressor = KING;
     while(king_attacks) {
-        move.destination = _tzcnt_u64(king_attacks); 
-        moves.push_back(move);
-
-        king_attacks &= (king_attacks - 1); 
+        move.destination = pop_lsb(king_attacks);
+        moves.push_back(move); 
     }
 }
 
-void queenMoves(uint64_t queen_loc, uint64_t friendly, uint64_t all_pieces, std::vector<Move> &moves) {
-    Move move; 
-    move.aggressor = QUEEN; 
+void queenMoves(Position &pos, std::vector<Move> &moves) {
+    uint64_t queen_loc = pos.Pieces[pos.color].queen;
+    Move move;
+    move.aggressor = QUEEN;
     while(queen_loc) {
-        move.origin = _tzcnt_u64(queen_loc);
-        uint64_t queen_attacks = getQueenPseudoLegal(move.origin, all_pieces);
-        queen_attacks &= ~friendly;
+        move.origin = pop_lsb(queen_loc);
+        uint64_t bishop_attacks = getBishopPseudoLegal(move.origin, pos.all);
+        uint64_t rook_attacks = getRookPseudoLegal(move.origin, pos.all);
+        rook_attacks &= ~pos.Pieces[pos.color].all;
+        bishop_attacks &= ~pos.Pieces[pos.color].all;
+        if((1ULL << move.origin) & pos.pinned) {
+            //queen is pinned
+            //a queen can always move in a pin 
+            // if one direction is possible the other is impossible 
+            uint64_t newbish = getBishopPseudoLegal(pos.kingsq, pos.all & ~(1ULL << move.origin));
+            if(bishop_attacks & newbish) {
+                bishop_attacks &= newbish;    
+                rook_attacks = 0ULL;            
+            }
+            else {
+                rook_attacks &= getRookPseudoLegal(pos.kingsq, pos.all & ~(1ULL << move.origin)); 
+                bishop_attacks = 0ULL;
+            }        
+        } 
+        uint64_t queen_attacks = rook_attacks | bishop_attacks; 
         while(queen_attacks) {
-            move.destination = _tzcnt_u64(queen_attacks);
-            moves.push_back(move);
-            queen_attacks &= (queen_attacks-1);
+            move.destination = pop_lsb(queen_attacks);
+            moves.push_back(move); 
         }
-        queen_loc &= (queen_loc-1); 
     }
 }
 
-void bishopMoves(uint64_t bishop_loc, uint64_t friendly, uint64_t all_pieces, std::vector<Move> &moves) {
+void bishopMoves(Position &pos, std::vector<Move> &moves) {
+    uint64_t bishop_loc = pos.Pieces[pos.color].bishop; 
     Move move;
     move.aggressor = BISHOP;
     while(bishop_loc) {
-        move.origin = _tzcnt_u64(bishop_loc);
-        uint64_t bishop_attacks = getBishopPseudoLegal(move.origin, all_pieces);
-        bishop_attacks &= ~friendly;
-        while(bishop_attacks) {
-            move.destination = _tzcnt_u64(bishop_attacks);
-            moves.push_back(move);
-            bishop_attacks &= (bishop_attacks-1); 
+        move.origin = pop_lsb(bishop_loc);
+        
+        uint64_t bishop_attacks = getBishopPseudoLegal(move.origin, pos.all);
+        bishop_attacks &= ~pos.Pieces[pos.color].all;
+
+        if((1ULL << move.origin) & pos.pinned) {
+            //bishop is pinned
+            bishop_attacks &= getBishopPseudoLegal(pos.kingsq, pos.all & ~(1ULL << move.origin));
         }
-        bishop_loc &= (bishop_loc-1);
+
+        while(bishop_attacks) {
+            move.destination = pop_lsb(bishop_attacks);
+            moves.push_back(move); 
+        }
     }
 }
 
-void rookMoves(uint64_t rook_loc, uint64_t friendly, uint64_t all_pieces, std::vector<Move> &moves) {
+void rookMoves(Position &pos, std::vector<Move> &moves) {
+    uint64_t rook_loc = pos.Pieces[pos.color].rook;
     Move move;
     move.aggressor = ROOK; 
     while(rook_loc) {
-        move.origin = _tzcnt_u64(rook_loc);
-        uint64_t rook_attacks = getRookPseudoLegal(move.origin, all_pieces);
-        rook_attacks &= ~friendly; 
-        while(rook_attacks) {
-            move.destination = _tzcnt_u64(rook_attacks); 
-            moves.push_back(move); 
-            rook_attacks &= (rook_attacks-1); 
+        move.origin = pop_lsb(rook_loc);
+        uint64_t rook_attacks = getRookPseudoLegal(move.origin, pos.all);
+        rook_attacks &= ~pos.Pieces[pos.color].all;
+
+        if((1ULL << move.origin) & pos.pinned) {
+            //rook is pinned 
+            rook_attacks &= getRookPseudoLegal(pos.kingsq, pos.all & ~(1ULL << move.origin));
         }
-        rook_loc &= (rook_loc-1);
+
+        while(rook_attacks) {
+            move.destination = pop_lsb(rook_attacks);
+            moves.push_back(move); 
+        }
     }
+}
+
+uint64_t getPinned(Position &pos) {
+    uint64_t pinned = 0; 
+    uint64_t pinner = xrayRookAttacks(pos.kingsq, pos.all, pos.Pieces[pos.color].all)
+                    & (pos.Pieces[!pos.color].rook | pos.Pieces[!pos.color].queen);
+    while(pinner) {
+        int sq = _tzcnt_u64(pinner);
+        uint64_t possible_pinned = getRookPseudoLegal(pos.kingsq, pos.all); 
+        possible_pinned &= getRookPseudoLegal(sq, pos.all);
+        possible_pinned &= pos.Pieces[pos.color].all;
+        if(_popcnt64(possible_pinned) == 1) {
+            pinned |= possible_pinned; 
+        }
+        pinner &= (pinner-1); 
+    }
+
+    pinner = xrayBishopAttacks(pos.kingsq, pos.all, pos.Pieces[pos.color].all)
+            & (pos.Pieces[!pos.color].bishop | pos.Pieces[!pos.color].queen); 
+    while(pinner) {
+        int sq = _tzcnt_u64(pinner);
+        uint64_t possible_pinned = getBishopPseudoLegal(pos.kingsq, pos.all); 
+        possible_pinned &= getBishopPseudoLegal(sq, pos.all);
+        possible_pinned &= pos.Pieces[pos.color].all;
+        if(_popcnt64(possible_pinned) == 1) {
+            pinned |= possible_pinned; 
+        }
+        pinner &= (pinner-1);
+    }
+    return pinned; 
 }

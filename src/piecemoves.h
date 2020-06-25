@@ -62,6 +62,13 @@ inline uint64_t xrayRookAttacks(int square, uint64_t all, uint64_t friendly) {
     return rook_attacks ^ getRookPseudoLegal(square, all ^ friendly); 
 }
 
+inline uint64_t xrayBishopAttacks(int square, uint64_t all, uint64_t friendly) {
+    uint64_t bishop_attacks = getBishopPseudoLegal(square, all);
+    friendly &= bishop_attacks;
+    return bishop_attacks ^ getBishopPseudoLegal(square, all ^ friendly); 
+}
+
+
 #endif
 
 

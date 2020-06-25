@@ -38,5 +38,11 @@ inline void printBitBoard(uint64_t BB) {
     }
 }
 
+inline int pop_lsb(uint64_t &v) {
+    int res = _tzcnt_u64(v);
+    v &= (v-1);
+    return res; 
+}
+
 
 #endif

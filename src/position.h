@@ -19,6 +19,11 @@ class Position {
         int fullmove_number; 
         bool incheck; // is the side to move in check 
 
+        //useful datamembers 
+        uint64_t all; 
+        uint64_t pinned; 
+        int kingsq; 
+
         //Public member functions
         bool isinCheck(); 
         bool isLegal(Move move); 
@@ -37,6 +42,9 @@ inline bool Position::isinCheck() {
 }
 
 inline bool Position::isLegal(Move move) {
+    if(!incheck && move.aggressor != KING) {
+        return true; 
+    }
     uint64_t dest = 1ULL << move.destination;  
     uint64_t orig = ~(1ULL << move.origin);
 
