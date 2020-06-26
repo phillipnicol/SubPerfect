@@ -6,12 +6,13 @@ std::vector<Move> Moves::generateMoves(Position &pos) {
     pos.all = pos.Pieces[pos.color].all | pos.Pieces[!pos.color].all; 
     pos.kingsq = _tzcnt_u64(pos.Pieces[pos.color].king);
 
-    pos.pinned = getPinned(pos); 
+    pos.pinned = getPinned(pos);
+    //pos.pinned = 0ULL;
 
     if(pos.isinCheck()) {
         CheckType checkdata = PieceMoves::getCheckData(pos.kingsq, pos.Pieces[pos.color], pos.Pieces[!pos.color]);
         pos.safety_map = checkdata.safety_map; 
-
+        
         kingMoves(pos, moves);
         //Generate blocking evasions
         if(checkdata.nchecks < 2) {
@@ -93,6 +94,9 @@ void Moves::makeMove(Position &pos, Move &move) {
     if(move.victim != QUIET || move.aggressor == PAWN) {
         pos.halfmove_clock = 0; 
     } //for 50 move draw
+    else {
+        ++pos.halfmove_clock; 
+    }
 }
 
 void Moves::unmakeMove(Position &pos, Move move) {
@@ -178,9 +182,9 @@ void queenMoves(Position &pos, std::vector<Move> &moves) {
             //a queen can always move in a pin 
             // if one direction is possible the other is impossible 
             uint64_t newbish = getBishopPseudoLegal(pos.kingsq, pos.all & ~(1ULL << move.origin));
-            if(bishop_attacks & newbish) {
-                bishop_attacks &= newbish;    
-                rook_attacks = 0ULL;            
+            if(newbish & (1ULL << move.origin)) {
+                bishop_attacks &= newbish;
+                rook_attacks = 0ULL;               
             }
             else {
                 rook_attacks &= getRookPseudoLegal(pos.kingsq, pos.all & ~(1ULL << move.origin)); 
@@ -242,31 +246,29 @@ void rookMoves(Position &pos, std::vector<Move> &moves) {
 }
 
 uint64_t getPinned(Position &pos) {
-    uint64_t pinned = 0; 
+    uint64_t pinned = 0ULL; 
     uint64_t pinner = xrayRookAttacks(pos.kingsq, pos.all, pos.Pieces[pos.color].all)
                     & (pos.Pieces[!pos.color].rook | pos.Pieces[!pos.color].queen);
     while(pinner) {
-        int sq = _tzcnt_u64(pinner);
+        int sq = pop_lsb(pinner);
         uint64_t possible_pinned = getRookPseudoLegal(pos.kingsq, pos.all); 
         possible_pinned &= getRookPseudoLegal(sq, pos.all);
         possible_pinned &= pos.Pieces[pos.color].all;
         if(_popcnt64(possible_pinned) == 1) {
             pinned |= possible_pinned; 
         }
-        pinner &= (pinner-1); 
     }
 
     pinner = xrayBishopAttacks(pos.kingsq, pos.all, pos.Pieces[pos.color].all)
             & (pos.Pieces[!pos.color].bishop | pos.Pieces[!pos.color].queen); 
     while(pinner) {
-        int sq = _tzcnt_u64(pinner);
+        int sq = pop_lsb(pinner);
         uint64_t possible_pinned = getBishopPseudoLegal(pos.kingsq, pos.all); 
         possible_pinned &= getBishopPseudoLegal(sq, pos.all);
         possible_pinned &= pos.Pieces[pos.color].all;
         if(_popcnt64(possible_pinned) == 1) {
             pinned |= possible_pinned; 
         }
-        pinner &= (pinner-1);
     }
     return pinned; 
 }
