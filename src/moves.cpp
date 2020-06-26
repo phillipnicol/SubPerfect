@@ -24,7 +24,6 @@ std::vector<Move> Moves::generateMoves(Position &pos) {
     else {
         pos.safety_map = ~0ULL;
 
-        //Generate non-evasions 
         kingMoves(pos, moves); 
         queenMoves(pos, moves);
         rookMoves(pos, moves); 
@@ -245,6 +244,7 @@ void rookMoves(Position &pos, std::vector<Move> &moves) {
     }
 }
 
+//OPTIMIZE HERE - OBSTRUCTED MIGHT BE SLOW 
 uint64_t getPinned(Position &pos) {
     uint64_t pinned = 0ULL; 
     uint64_t pinner = xrayRookAttacks(pos.kingsq, pos.all, pos.Pieces[pos.color].all)
