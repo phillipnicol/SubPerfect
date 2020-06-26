@@ -7,6 +7,7 @@
 void kingMoves(Position &pos, std::vector<Move> &moves);
 void queenMoves(Position &pos, std::vector<Move> &moves);
 void bishopMoves(Position &pos, std::vector<Move> &moves);
+void knightMoves(Position &pos, std::vector<Move> &moves); 
 void rookMoves(Position &pos, std::vector<Move> &moves);
 
 uint64_t getPinned(Position &pos);

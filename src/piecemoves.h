@@ -24,24 +24,31 @@ namespace PieceMoves {
     CheckType getCheckData(int kingsq, Board friendly, Board enemy);
 };
 
+extern uint32_t PawnPushMasks[2][64]; 
+extern uint32_t PawnCaptureMasks[2][64];
 extern std::vector<uint64_t> BishopMasks;
 extern std::vector<uint64_t> RookMasks;
+extern std::vector<uint64_t> KnightMasks; 
 extern std::vector<uint64_t> KingMasks; 
 
 extern std::vector<uint64_t> SlidingAttacks;
 extern uint32_t RookOffset[64];
 extern uint32_t BishopOffset[64]; 
 
+inline uint64_t getPawnCapturesPseudoLegal(int square, bool side, uint64_t blockers) {
+    return (PawnCaptureMasks[side][square] & blockers); 
+}
+
 inline uint64_t getRookPseudoLegal(int square, uint64_t blockers) {
     return SlidingAttacks[RookOffset[square] + _pext_u64(blockers, RookMasks[square])];
 }
 
-inline uint64_t getBishopPseudoLegal(int square, uint64_t blockers) {
-    return SlidingAttacks[BishopOffset[square] + _pext_u64(blockers, BishopMasks[square])];    
+inline uint64_t getKnightPseudoLegal(int square) {
+    return KnightMasks[square]; 
 }
 
-inline uint64_t getQueenPseudoLegal(int square, uint64_t blockers) {
-    return (getRookPseudoLegal(square, blockers) | getBishopPseudoLegal(square, blockers)); 
+inline uint64_t getBishopPseudoLegal(int square, uint64_t blockers) {
+    return SlidingAttacks[BishopOffset[square] + _pext_u64(blockers, BishopMasks[square])];    
 }
 
 inline uint64_t getKingPseudoLegal(int square) {
@@ -55,6 +62,9 @@ inline bool squareAttacked(int square, uint64_t blockers, Board enemy) {
     }
     else if(getBishopPseudoLegal(square, blockers) & (enemy.bishop | enemy.queen)){
         return true;
+    }
+    else if(getKnightPseudoLegal(square) & enemy.knight) {
+        return true; 
     }
     else if(getKingPseudoLegal(square) & enemy.king) {
         return true; 

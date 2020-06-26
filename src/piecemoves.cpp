@@ -22,6 +22,12 @@ CheckType PieceMoves::getCheckData(int kingsq, Board friendly, Board enemy) {
         safety_map = getBishopPseudoLegal(kingsq, blockers) & getBishopPseudoLegal(attacksq, blockers); 
         safety_map |= (1ULL << attacksq);   
     }
+    danger = getKnightPseudoLegal(kingsq) & enemy.knight;
+    if(danger) {
+        nchecks += _popcnt64(danger);
+        int attacksq = _tzcnt_u64(danger);
+        safety_map = 1ULL << attacksq; 
+    }
 
     CheckType checkdata;
     checkdata.nchecks = nchecks; checkdata.safety_map = safety_map; 

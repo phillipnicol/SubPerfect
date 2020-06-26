@@ -4,23 +4,29 @@
 #include<algorithm> 
 #include"piecetables.h"
 
+uint32_t PawnPushMasks[2][64]; 
+uint32_t PawnCaptureMasks[2][64];
 std::vector<uint64_t> BishopMasks(64,0);
 std::vector<uint64_t> RookMasks(64,0);
 std::vector<uint64_t> KingMasks(64,0);
+std::vector<uint64_t> KnightMasks(64,0);
 
 std::vector<std::vector<uint64_t> > BishopMagicBB(64, std::vector<uint64_t>()); 
 std::vector<std::vector<uint64_t> > RookMagicBB(64, std::vector<uint64_t>()); 
 
+//For pext bitboards 
 std::vector<uint64_t> SlidingAttacks;
 uint32_t RookOffset[64];
 uint32_t BishopOffset[64]; 
 
 void PieceTables::init() {
     std::vector<std::vector<uint64_t> > Rays = makeRays();
-    PieceTables::makeMasks(Rays);
+    PieceTables::makeBRMasks(Rays);
 
     PieceTables::fillSlidingAttacks(Rays);
 
+    PieceTables::makePawnMasks();
+    PieceTables::makeKnightMasks();
     PieceTables::makeKingMasks();
     
 }
@@ -87,11 +93,61 @@ void PieceTables::fillRookMagicBB(std::vector<std::vector<uint64_t> > &Rays) {
     }
 }
 
-void PieceTables::makeMasks(std::vector<std::vector<uint64_t> > &Rays) {
+void PieceTables::makePawnMasks() {
+    //fill pawn push masks
+    for(int i = 0; i < 64; ++i) {
+        uint64_t pos = 1ULL << i; 
+        PawnCaptureMasks[0][i] = (pos << 8);
+        PawnCaptureMasks[1][i] = (pos >> 8); 
+    }
+    //fill pawn capture masks 
+    for(int i = 0; i < 64; ++i) {
+        uint64_t pos = 1ULL << i; 
+        if(pos & FILE_A) {
+            PawnCaptureMasks[0][i] = (pos << 9);
+            PawnCaptureMasks[1][i] = (pos >> 9); 
+        }
+        else if(pos & FILE_H) {
+            PawnCaptureMasks[0][i] = (pos << 7);
+            PawnCaptureMasks[1][i] = (pos >> 7);
+        }
+        else {
+            PawnCaptureMasks[0][i] = (pos << 7) | (pos << 9);
+            PawnCaptureMasks[1][i] = (pos >> 7) | (pos >> 9); 
+        }
+    }
+}
+
+void PieceTables::makeBRMasks(std::vector<std::vector<uint64_t> > &Rays) {
     uint64_t edgesquares = FILE_A | FILE_H | RANK_1 | RANK_8;     
     for(int i = 0; i < 64; ++i) {
         BishopMasks[i] = (Rays[NE][i] | Rays[SE][i] | Rays[SW][i] | Rays[NW][i]) & ~edgesquares; 
         RookMasks[i] = (Rays[N][i] & ~RANK_8) | (Rays[E][i] & ~FILE_H) | (Rays[S][i] & ~RANK_1) | (Rays[W][i] & ~FILE_A); 
+    }
+}
+
+void PieceTables::makeKnightMasks() {
+    for(int i = 0; i < 64; ++i) {
+        uint64_t pos = 1ULL << i; 
+        if(pos & FILE_A) {
+            KnightMasks[i] = (pos << 17) | (pos << 10) | (pos >> 6) | (pos >> 15);
+        }
+        else if(pos & FILE_B) {
+            KnightMasks[i] = (pos << 17) | (pos << 10) | (pos >> 6) | (pos >> 15);
+            KnightMasks[i] |= (pos << 15) | (pos >> 17); 
+        }
+        else if(pos & FILE_G) {
+            KnightMasks[i] = (pos >> 17) | (pos >> 10) | (pos << 6) | (pos << 15); 
+            KnightMasks[i] |= (pos >> 15) | (pos << 17); 
+        }
+        else if(pos & FILE_H) {
+            KnightMasks[i] = (pos >> 17) | (pos >> 10) | (pos << 6) | (pos << 15); 
+        }
+        else {
+            //Knight is somewhat in the center
+            KnightMasks[i] = (pos >> 10) | (pos << 6) | (pos << 15) | (pos << 17);
+            KnightMasks[i] |= (pos << 10) | (pos >> 6) | (pos >> 15) | (pos >> 17); 
+        }
     }
 }
 

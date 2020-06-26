@@ -7,19 +7,18 @@ std::vector<Move> Moves::generateMoves(Position &pos) {
     pos.kingsq = _tzcnt_u64(pos.Pieces[pos.color].king);
 
     pos.pinned = getPinned(pos);
-    //pos.pinned = 0ULL;
 
     if(pos.isinCheck()) {
         CheckType checkdata = PieceMoves::getCheckData(pos.kingsq, pos.Pieces[pos.color], pos.Pieces[!pos.color]);
         pos.safety_map = checkdata.safety_map; 
-        //pos.safety_map = ~0ULL;
         
         kingMoves(pos, moves);
         //Generate blocking evasions
         if(checkdata.nchecks < 2) {
             queenMoves(pos, moves);
-            rookMoves(pos, moves); 
-            bishopMoves(pos, moves);            
+            bishopMoves(pos, moves);      
+            knightMoves(pos, moves);    
+            rookMoves(pos, moves);    
         }
     }
     else {
@@ -27,8 +26,9 @@ std::vector<Move> Moves::generateMoves(Position &pos) {
 
         kingMoves(pos, moves); 
         queenMoves(pos, moves);
-        rookMoves(pos, moves); 
         bishopMoves(pos, moves);
+        knightMoves(pos, moves); 
+        rookMoves(pos, moves); 
     }
 
     return moves; 
@@ -41,9 +41,14 @@ void Moves::makeMove(Position &pos, Move &move) {
     uint64_t orig = ~(1ULL << move.origin);
 
     switch(move.aggressor) {
+        case PAWN: break; 
         case ROOK:
             pos.Pieces[pos.color].rook &= orig;
             pos.Pieces[pos.color].rook |= dest; 
+            break;
+        case KNIGHT:
+            pos.Pieces[pos.color].knight &= orig;
+            pos.Pieces[pos.color].knight |= dest; 
             break;
         case BISHOP:
             pos.Pieces[pos.color].bishop &= orig;
@@ -119,6 +124,8 @@ void Moves::unmakeMove(Position &pos, Move move) {
             pos.Pieces[!pos.color].all |= dest;
             break;
         case KNIGHT: 
+            pos.Pieces[!pos.color].knight |= dest;
+            pos.Pieces[!pos.color].all |= dest; 
             break;
         case BISHOP:
             pos.Pieces[!pos.color].bishop |= dest;
@@ -138,7 +145,10 @@ void Moves::unmakeMove(Position &pos, Move move) {
             pos.Pieces[pos.color].rook |= orig;
             pos.Pieces[pos.color].rook &= dest; 
             break;
-        case KNIGHT: break;
+        case KNIGHT: 
+            pos.Pieces[pos.color].knight |= orig;
+            pos.Pieces[pos.color].knight &= dest;
+            break;
         case BISHOP: 
             pos.Pieces[pos.color].bishop |= orig;
             pos.Pieces[pos.color].bishop &= dest; 
@@ -230,6 +240,30 @@ void bishopMoves(Position &pos, std::vector<Move> &moves) {
     }
 }
 
+void knightMoves(Position &pos, std::vector<Move> &moves) {
+    uint64_t knight_loc = pos.Pieces[pos.color].knight;
+    Move move;
+    move.aggressor = KNIGHT;
+    while(knight_loc) {
+        move.origin = pop_lsb(knight_loc);
+
+        uint64_t knight_attacks = getKnightPseudoLegal(move.origin); 
+        knight_attacks &= ~pos.Pieces[pos.color].all;
+
+        if(1ULL << (move.origin) & pos.pinned) {
+            //Knights can never move along a pin line
+            knight_attacks = 0ULL;
+        }
+        
+        knight_attacks &= pos.safety_map; 
+
+        while(knight_attacks) {
+            move.destination = pop_lsb(knight_attacks); 
+            moves.push_back(move); 
+        }
+    }
+}
+
 void rookMoves(Position &pos, std::vector<Move> &moves) {
     uint64_t rook_loc = pos.Pieces[pos.color].rook;
     Move move;
@@ -257,6 +291,10 @@ void rookMoves(Position &pos, std::vector<Move> &moves) {
             moves.push_back(move); 
         }
     }
+}
+
+void pawnMoves(Position &pos, std::vector<Move> &moves) {
+    //TODO 
 }
 
 //OPTIMIZE HERE - OBSTRUCTED MIGHT BE SLOW 

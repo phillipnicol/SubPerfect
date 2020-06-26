@@ -45,6 +45,7 @@ Board representation for reference (from Chess Programming wikipedia)
 #define FILE_D 0x808080808080808ULL
 #define FILE_E 0x1010101010101010ULL
 #define FILE_F 0x2020202020202020ULL
+#define FILE_G 0x4040404040404040ULL
 #define FILE_H 0x8080808080808080ULL
 
 #define RANK_1 0xffULL

@@ -20,6 +20,7 @@ uint64_t Perft::Perft(std::string FEN, int depth, bool verbose) {
         std::cout << "+----+----+----+----+----+----+----+----+" << std::endl << std::endl;
         std::cout << "             Perft results" << std::endl << std::endl;
         std::cout << "Starting position: " << FEN << std::endl << std::endl;
+        std::cout << "Depth: " << depth << std::endl << std::endl; 
         std::cout << "Nodes searched: " << std::fixed << nodes  << std::endl << std::endl; 
         std::cout << "Nodes per second: " << nps << std::endl << std::endl; 
         std::cout << "+----+----+----+----+----+----+----+----+" << std::endl;
