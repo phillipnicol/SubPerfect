@@ -22,6 +22,7 @@ class Position {
         //useful datamembers 
         uint64_t all; 
         uint64_t pinned; 
+        uint64_t safety_map; 
         int kingsq; 
 
         //Public member functions
@@ -42,7 +43,7 @@ inline bool Position::isinCheck() {
 }
 
 inline bool Position::isLegal(Move move) {
-    if(!incheck && move.aggressor != KING) {
+    if(move.aggressor != KING) {
         return true; 
     }
     uint64_t dest = 1ULL << move.destination;  

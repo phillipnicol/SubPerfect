@@ -4,10 +4,12 @@ int main() {
     PieceTables::init();
 
     Position position;
-    position.setFEN("KR5r/8/4R3/3r4/8/8/8/kr5R w - - 0 1");
+    position.setFEN("KQ6/8/8/8/8/8/8/6qk b - - 0 1");
     position.printPosition();
 
-    //std::vector<Move> moves = Moves::generateMoves(position);
+    std::vector<Move> moves = Moves::generateMoves(position);
+    std::cout << moves.size() << std::endl;
+    std::cout << position.incheck << std::endl;
 
-    Perft::Perft("KR5r/8/4R3/3r4/8/8/8/kr5R w - - 0 1", 4, true);
+     Perft::Perft("KQ6/8/8/8/8/8/8/6qk b - - 0 1", 2, true);
 }

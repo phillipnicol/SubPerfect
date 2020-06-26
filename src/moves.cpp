@@ -9,15 +9,21 @@ std::vector<Move> Moves::generateMoves(Position &pos) {
     pos.pinned = getPinned(pos); 
 
     if(pos.isinCheck()) {
-        //Generate evasions
+        CheckType checkdata = PieceMoves::getCheckData(pos.kingsq, pos.Pieces[pos.color], pos.Pieces[!pos.color]);
+        pos.safety_map = checkdata.safety_map; 
+
         kingMoves(pos, moves);
-        queenMoves(pos, moves);
-        rookMoves(pos, moves);
-        bishopMoves(pos, moves); 
+        //Generate blocking evasions
+        if(checkdata.nchecks < 2) {
+            queenMoves(pos, moves);
+            rookMoves(pos, moves); 
+            bishopMoves(pos, moves);            
+        }
     }
     else {
-        //Generate non-evasions 
+        pos.safety_map = ~0ULL;
 
+        //Generate non-evasions 
         kingMoves(pos, moves); 
         queenMoves(pos, moves);
         rookMoves(pos, moves); 
@@ -182,6 +188,7 @@ void queenMoves(Position &pos, std::vector<Move> &moves) {
             }        
         } 
         uint64_t queen_attacks = rook_attacks | bishop_attacks; 
+        queen_attacks &= pos.safety_map; 
         while(queen_attacks) {
             move.destination = pop_lsb(queen_attacks);
             moves.push_back(move); 
@@ -204,6 +211,7 @@ void bishopMoves(Position &pos, std::vector<Move> &moves) {
             bishop_attacks &= getBishopPseudoLegal(pos.kingsq, pos.all & ~(1ULL << move.origin));
         }
 
+        bishop_attacks &= pos.safety_map; 
         while(bishop_attacks) {
             move.destination = pop_lsb(bishop_attacks);
             moves.push_back(move); 
@@ -225,6 +233,7 @@ void rookMoves(Position &pos, std::vector<Move> &moves) {
             rook_attacks &= getRookPseudoLegal(pos.kingsq, pos.all & ~(1ULL << move.origin));
         }
 
+        rook_attacks &= pos.safety_map; 
         while(rook_attacks) {
             move.destination = pop_lsb(rook_attacks);
             moves.push_back(move); 

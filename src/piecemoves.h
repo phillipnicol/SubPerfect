@@ -15,7 +15,13 @@ struct Move {
     int aggressor, victim; 
 };
 
+struct CheckType {
+    int nchecks;
+    uint64_t safety_map;
+};
+
 namespace PieceMoves {
+    CheckType getCheckData(int kingsq, Board friendly, Board enemy);
 };
 
 extern std::vector<uint64_t> BishopMasks;
