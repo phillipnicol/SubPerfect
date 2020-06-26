@@ -12,6 +12,7 @@ std::vector<Move> Moves::generateMoves(Position &pos) {
     if(pos.isinCheck()) {
         CheckType checkdata = PieceMoves::getCheckData(pos.kingsq, pos.Pieces[pos.color], pos.Pieces[!pos.color]);
         pos.safety_map = checkdata.safety_map; 
+        //pos.safety_map = ~0ULL;
         
         kingMoves(pos, moves);
         //Generate blocking evasions
@@ -211,7 +212,14 @@ void bishopMoves(Position &pos, std::vector<Move> &moves) {
 
         if((1ULL << move.origin) & pos.pinned) {
             //bishop is pinned
-            bishop_attacks &= getBishopPseudoLegal(pos.kingsq, pos.all & ~(1ULL << move.origin));
+            //bishop can only move diagonally along a pin
+            uint64_t newbish = getBishopPseudoLegal(pos.kingsq, pos.all & ~(1ULL << move.origin));
+            if(newbish & (1ULL << move.origin)) {
+                bishop_attacks &= newbish;
+            }
+            else {
+                bishop_attacks = 0ULL;
+            }
         }
 
         bishop_attacks &= pos.safety_map; 
@@ -233,6 +241,13 @@ void rookMoves(Position &pos, std::vector<Move> &moves) {
 
         if((1ULL << move.origin) & pos.pinned) {
             //rook is pinned 
+            uint64_t newrook = getRookPseudoLegal(pos.kingsq, pos.all & ~(1ULL << move.origin));
+            if(newrook & (1ULL << move.origin)) {
+                rook_attacks &= newrook;
+            }
+            else {
+                rook_attacks = 0ULL;
+            }
             rook_attacks &= getRookPseudoLegal(pos.kingsq, pos.all & ~(1ULL << move.origin));
         }
 

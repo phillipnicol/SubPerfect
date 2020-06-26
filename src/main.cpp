@@ -11,5 +11,5 @@ int main() {
     std::cout << moves.size() << std::endl;
     std::cout << position.incheck << std::endl;
 
-    Perft::Perft("KR6/8/8/8/8/8/8/6rk b - - 0 1", 5, true);
+    Perft::Perft("rrbqkbrr/8/8/8/8/8/8/RRBQKBRR w - - 0 1", 5, true);
 }
