@@ -8,10 +8,13 @@ TEST_CASE("Piece generation is is correct") {
     SECTION("Queens") {
         REQUIRE(Perft::Perft("KQ6/QQ6/8/8/8/8/6qq/6qk b - - 0 1", 4, false) == 798835);
     }
-    SECTION("Rooks") {
-        REQUIRE(Perft::Perft("KR5r/8/4R3/3r4/8/8/8/kr5R w - - 0 1", 4, false) == 968642);
-    }
     SECTION("Bishops") {
         REQUIRE(Perft::Perft("K7/BB6/bb6/8/8/8/8/k6b w - - 0 1", 4, false) == 41060);
+    }
+    SECTION("Knights") {
+        REQUIRE(Perft::Perft("K7/8/3N4/4n3/8/8/8/7k w - - 0 1", 6, false) == 1355713);
+    }
+    SECTION("Rooks") {
+        REQUIRE(Perft::Perft("KR5r/8/4R3/3r4/8/8/8/kr5R w - - 0 1", 4, false) == 968642);
     }
 }
