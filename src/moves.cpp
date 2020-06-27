@@ -106,12 +106,16 @@ void Moves::makeMove(Position &pos, Move &move) {
         switch(move.promotype) {
             case ROOK:
                 pos.Pieces[pos.color].rook |= dest;
+                break;
             case KNIGHT:
                 pos.Pieces[pos.color].knight |= dest;
+                break;
             case BISHOP:
                 pos.Pieces[pos.color].bishop |= dest;
+                break;
             case QUEEN:
                 pos.Pieces[pos.color].queen |= dest;
+                break;
         }
     }
 
@@ -197,12 +201,16 @@ void Moves::unmakeMove(Position &pos, Move move) {
         switch(move.promotype) {
             case ROOK:
                 pos.Pieces[pos.color].rook &= dest;
+                break;
             case KNIGHT:
                 pos.Pieces[pos.color].knight &= dest;
+                break;
             case BISHOP:
                 pos.Pieces[pos.color].bishop &= dest;
+                break;
             case QUEEN:
                 pos.Pieces[pos.color].queen &= dest;
+                break;
         }       
     }
 }
@@ -338,6 +346,7 @@ void rookMoves(Position &pos, std::vector<Move> &moves) {
 void pawnMoves(Position &pos, std::vector<Move> &moves) {
     Move move;
     move.aggressor = PAWN; 
+    move.enpassant = false; 
 
     uint64_t emptysquares = ~pos.all; 
     bool side = pos.color; 
@@ -375,7 +384,58 @@ void pawnMoves(Position &pos, std::vector<Move> &moves) {
         } 
     }
 
-    //get double push 
+    //*** get double pushes***//
+    uint64_t doublepush = getPawnDoublePush(pos.Pieces[side].pawn, emptysquares, side);
+    doublepush &= pos.safety_map; 
+
+    while(doublepush) {
+        move.origin = pop_lsb(doublepush);
+        side ? move.destination = move.origin - 16 : move.destination = move.origin + 16; 
+
+        if((1ULL << move.origin) & pos.pinned) {
+            //TODO 
+        }
+
+        //no promotion possible with double push
+        move.promotion = false;
+        moves.push_back(move); 
+    }
+
+    /*** get captures ***/
+    uint64_t pawns = pos.Pieces[side].pawn;
+    while(pawns) {
+        move.origin = pop_lsb(pawns);
+
+        uint64_t pawn_attacks = getPawnCapturesPseudoLegal(move.origin, side, pos.Pieces[!side].all);
+        pawn_attacks &= pos.safety_map; 
+
+        if((1ULL << move.origin) & pos.pinned) {
+            //TODO 
+        }
+
+        //***check for en passant capture ***/
+        if(pos.en_passant_target != 65) {
+            //TODO 
+        }
+
+        while(pawn_attacks) {
+            move.destination = pop_lsb(pawn_attacks);
+            if(!side && move.destination >= 56) {
+                move.promotion = true;
+                makePromotion(move, moves);
+
+            }
+            else if(move.destination <= 7) {
+                move.promotion = true;
+                makePromotion(move, moves); 
+
+            }
+            else {
+                move.promotion = false; 
+                moves.push_back(move); 
+            } 
+        }
+    }
 }
 
 //OPTIMIZE HERE - OBSTRUCTED MIGHT BE SLOW 

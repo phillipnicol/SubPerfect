@@ -37,8 +37,7 @@ class Position {
 };
 
 inline bool Position::isinCheck() {
-    int king_loc = _tzcnt_u64(Pieces[color].king);
-    incheck = squareAttacked(king_loc, Pieces[color].all | Pieces[!color].all, Pieces[!color]);
+    incheck = squareAttacked(kingsq, color, Pieces[color].all | Pieces[!color].all, Pieces[!color]);
     return incheck; 
 }
 
@@ -60,7 +59,7 @@ inline bool Position::isLegal(Move move) {
         enemycopy.pawn &= dest; enemycopy.rook &= dest; enemycopy.knight &= dest; 
         enemycopy.bishop &= dest; enemycopy.queen &= dest;
 
-        return !squareAttacked(move.destination, mycopy.all | enemycopy.all, enemycopy); 
+        return !squareAttacked(move.destination, color, mycopy.all | enemycopy.all, enemycopy); 
     }
     else {
         return true; 

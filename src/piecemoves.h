@@ -17,6 +17,9 @@ struct Move {
     //promotion flag
     bool promotion; 
     int promotype; 
+
+    //en passant flag
+    bool enpassant; 
 };
 
 struct CheckType {
@@ -28,7 +31,6 @@ namespace PieceMoves {
     CheckType getCheckData(int kingsq, Board friendly, Board enemy);
 };
 
-extern uint32_t PawnPushMasks[2][64]; 
 extern uint32_t PawnCaptureMasks[2][64];
 extern std::vector<uint64_t> BishopMasks;
 extern std::vector<uint64_t> RookMasks;
@@ -83,7 +85,7 @@ inline uint64_t getKingPseudoLegal(int square) {
     return KingMasks[square]; 
 }
 
-inline bool squareAttacked(int square, uint64_t blockers, Board enemy) {
+inline bool squareAttacked(int square, bool side, uint64_t blockers, Board enemy) {
     //Look at rooks 
     if(getRookPseudoLegal(square, blockers) & (enemy.rook | enemy.queen)) {
         return true;
@@ -92,6 +94,9 @@ inline bool squareAttacked(int square, uint64_t blockers, Board enemy) {
         return true;
     }
     else if(getKnightPseudoLegal(square) & enemy.knight) {
+        return true; 
+    }
+    else if(getPawnCapturesPseudoLegal(square, side, enemy.pawn)) {
         return true; 
     }
     else if(getKingPseudoLegal(square) & enemy.king) {
