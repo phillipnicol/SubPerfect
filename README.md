@@ -3,8 +3,8 @@
 A chess engine in development. 
 
 ## Features
--Board Representation
-  -[Bitboards]
--Move generation
-  -[Fancy PEXT bitboards for generating sliding attacks]
-  -[Nearly legal move generator] 
+  -Board Representation
+    -Bitboards
+  -Move generation
+    -Fancy PEXT bitboards for generating sliding attacks
+    -Nearly legal move generator
