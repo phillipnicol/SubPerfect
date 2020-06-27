@@ -4,13 +4,15 @@
 #ifndef MOVE_H_INCLUDED
 #define MOVE_H_INCLUDED
 
+uint64_t getPinned(Position &pos);
+void makePromotion(Move currmove, std::vector<Move> &moves);
+
 void kingMoves(Position &pos, std::vector<Move> &moves);
 void queenMoves(Position &pos, std::vector<Move> &moves);
 void bishopMoves(Position &pos, std::vector<Move> &moves);
 void knightMoves(Position &pos, std::vector<Move> &moves); 
 void rookMoves(Position &pos, std::vector<Move> &moves);
-
-uint64_t getPinned(Position &pos);
+void pawnMoves(Position &pos, std::vector<Move> &moves);
 
 namespace Moves {
     std::vector<Move> generateMoves(Position &pos);

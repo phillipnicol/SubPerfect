@@ -43,10 +43,29 @@ inline bool Position::isinCheck() {
 }
 
 inline bool Position::isLegal(Move move) {
-    if(move.aggressor != KING) {
+    if(move.aggressor == KING) {
+        Board mycopy = Pieces[color];
+        uint64_t dest = 1ULL << move.destination;  
+        uint64_t orig = ~(1ULL << move.origin);   
+
+        mycopy.king &= orig;
+        mycopy.king |= dest;   
+
+        mycopy.all &= orig; mycopy.all |= dest;   
+
+        //enemy
+        dest = ~dest; 
+        Board enemycopy = Pieces[!color];
+        enemycopy.all &= dest;
+        enemycopy.pawn &= dest; enemycopy.rook &= dest; enemycopy.knight &= dest; 
+        enemycopy.bishop &= dest; enemycopy.queen &= dest;
+
+        return !squareAttacked(move.destination, mycopy.all | enemycopy.all, enemycopy); 
+    }
+    else {
         return true; 
     }
-    uint64_t dest = 1ULL << move.destination;  
+    /*uint64_t dest = 1ULL << move.destination;  
     uint64_t orig = ~(1ULL << move.origin);
 
     Board mycopy = Pieces[color]; 
@@ -80,7 +99,7 @@ inline bool Position::isLegal(Move move) {
     enemycopy.bishop &= dest; enemycopy.queen &= dest;
 
     int king_loc = _tzcnt_u64(mycopy.king); 
-    return !squareAttacked(king_loc, mycopy.all | enemycopy.all, enemycopy); 
+    return !squareAttacked(king_loc, mycopy.all | enemycopy.all, enemycopy); */
 }
 
 //starting position 

@@ -13,6 +13,10 @@ enum PieceType {PAWN, ROOK, KNIGHT, BISHOP, QUEEN, KING, QUIET};
 struct Move {
     char origin, destination;
     int aggressor, victim; 
+
+    //promotion flag
+    bool promotion; 
+    int promotype; 
 };
 
 struct CheckType {
@@ -37,6 +41,30 @@ extern uint32_t BishopOffset[64];
 
 inline uint64_t getPawnCapturesPseudoLegal(int square, bool side, uint64_t blockers) {
     return (PawnCaptureMasks[side][square] & blockers); 
+}
+
+inline uint64_t getPawnSinglePush(uint64_t pawns, uint64_t emptysquares, bool side) {
+    if(!side) {
+        //White to move
+        //Shift squares by 8
+        return ((emptysquares >> 8) & pawns);
+
+    }
+    else {
+        //Black to move
+        return ((emptysquares << 8) & pawns); 
+    }
+}
+
+inline uint64_t getPawnDoublePush(uint64_t pawns, uint64_t emptysquares, bool side) {
+    if(!side) {
+        uint64_t emptyrank3 = ((emptysquares & RANK_4) >> 8) & emptysquares;        
+        return getPawnSinglePush(pawns, emptyrank3, 0);  
+    }
+    else {
+        uint64_t emptyrank6 = ((emptysquares & RANK_5) << 8) & emptysquares;
+        return getPawnSinglePush(pawns, emptyrank6, 1);
+    }
 }
 
 inline uint64_t getRookPseudoLegal(int square, uint64_t blockers) {

@@ -19,6 +19,7 @@ std::vector<Move> Moves::generateMoves(Position &pos) {
             bishopMoves(pos, moves);      
             knightMoves(pos, moves);    
             rookMoves(pos, moves);    
+            pawnMoves(pos, moves);
         }
     }
     else {
@@ -29,6 +30,7 @@ std::vector<Move> Moves::generateMoves(Position &pos) {
         bishopMoves(pos, moves);
         knightMoves(pos, moves); 
         rookMoves(pos, moves); 
+        pawnMoves(pos, moves);
     }
 
     return moves; 
@@ -41,7 +43,10 @@ void Moves::makeMove(Position &pos, Move &move) {
     uint64_t orig = ~(1ULL << move.origin);
 
     switch(move.aggressor) {
-        case PAWN: break; 
+        case PAWN: 
+            pos.Pieces[pos.color].pawn &= orig;
+            pos.Pieces[pos.color].pawn |= dest;
+            break; 
         case ROOK:
             pos.Pieces[pos.color].rook &= orig;
             pos.Pieces[pos.color].rook |= dest; 
@@ -93,6 +98,23 @@ void Moves::makeMove(Position &pos, Move &move) {
         move.victim = QUIET; 
     }
 
+    //*** special moves ***// 
+    if(move.aggressor == PAWN && move.promotion) {
+        //a promotion occurred
+        //remove pawn from the board
+        pos.Pieces[pos.color].pawn &= ~dest;
+        switch(move.promotype) {
+            case ROOK:
+                pos.Pieces[pos.color].rook |= dest;
+            case KNIGHT:
+                pos.Pieces[pos.color].knight |= dest;
+            case BISHOP:
+                pos.Pieces[pos.color].bishop |= dest;
+            case QUEEN:
+                pos.Pieces[pos.color].queen |= dest;
+        }
+    }
+
     //update game metadata 
     if(pos.color == BLACK) {++pos.fullmove_number;} //update move number
     pos.color = !pos.color; //switch color
@@ -118,6 +140,8 @@ void Moves::unmakeMove(Position &pos, Move move) {
     switch(move.victim) {
         case QUIET: break;
         case PAWN:
+            pos.Pieces[!pos.color].pawn |= dest;
+            pos.Pieces[!pos.color].all |= dest; 
             break;
         case ROOK: 
             pos.Pieces[!pos.color].rook |= dest; 
@@ -138,9 +162,12 @@ void Moves::unmakeMove(Position &pos, Move move) {
     }
 
     dest = ~dest; 
-    //Put agressor back in correct spot 
+    //Put aggressor back in correct spot 
     switch(move.aggressor) {
-        case PAWN: break;
+        case PAWN: 
+            pos.Pieces[pos.color].pawn |= orig;
+            pos.Pieces[pos.color].pawn &= dest; 
+            break;
         case ROOK: 
             pos.Pieces[pos.color].rook |= orig;
             pos.Pieces[pos.color].rook &= dest; 
@@ -163,6 +190,21 @@ void Moves::unmakeMove(Position &pos, Move move) {
             break;
     }
     pos.Pieces[pos.color].all &= dest; pos.Pieces[pos.color].all |= orig;
+
+    //***undo promotion***//
+    if(move.aggressor == PAWN && move.promotion) {
+        //get rid of destination square 
+        switch(move.promotype) {
+            case ROOK:
+                pos.Pieces[pos.color].rook &= dest;
+            case KNIGHT:
+                pos.Pieces[pos.color].knight &= dest;
+            case BISHOP:
+                pos.Pieces[pos.color].bishop &= dest;
+            case QUEEN:
+                pos.Pieces[pos.color].queen &= dest;
+        }       
+    }
 }
 
 void kingMoves(Position &pos, std::vector<Move> &moves) {
@@ -294,7 +336,46 @@ void rookMoves(Position &pos, std::vector<Move> &moves) {
 }
 
 void pawnMoves(Position &pos, std::vector<Move> &moves) {
-    //TODO 
+    Move move;
+    move.aggressor = PAWN; 
+
+    uint64_t emptysquares = ~pos.all; 
+    bool side = pos.color; 
+    //*** Get single push ***//
+    uint64_t singlepush = getPawnSinglePush(pos.Pieces[side].pawn, emptysquares, side); 
+
+    singlepush &= pos.safety_map; 
+
+    while(singlepush) {
+        move.origin = pop_lsb(singlepush);
+        side ? move.destination = move.origin - 8 : move.destination = move.origin + 8;
+
+        //check for pin
+        if((1ULL << move.origin) & pos.pinned) {
+            uint64_t newrook = getRookPseudoLegal(pos.kingsq, pos.all & ~(1ULL << move.origin));
+            if(!(newrook & (1ULL << move.origin))) {
+                continue; 
+            }
+        }
+
+        //check for promotion 
+        if(!side && move.destination >= 56) {
+            move.promotion = true;
+            makePromotion(move, moves);
+
+        }
+        else if(move.destination <= 7) {
+            move.promotion = true;
+            makePromotion(move, moves); 
+
+        }
+        else {
+            move.promotion = false; 
+            moves.push_back(move); 
+        } 
+    }
+
+    //get double push 
 }
 
 //OPTIMIZE HERE - OBSTRUCTED MIGHT BE SLOW 
@@ -324,4 +405,15 @@ uint64_t getPinned(Position &pos) {
         }
     }
     return pinned; 
+}
+
+void makePromotion(Move currmove, std::vector<Move> &moves) {
+    currmove.promotype = ROOK;
+    moves.push_back(currmove);
+    currmove.promotype = KNIGHT;
+    moves.push_back(currmove);
+    currmove.promotype = BISHOP;
+    moves.push_back(currmove);
+    currmove.promotype = QUEEN;
+    moves.push_back(currmove);
 }
