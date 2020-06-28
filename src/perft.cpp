@@ -42,9 +42,9 @@ uint64_t Perft::PerftMain(Position pos, int depth) {
     }
     for(auto move : moves) {
         if(pos.isLegal(move)) {
-            Moves::makeMove(pos, move);
+            GameState metadata = Moves::makeMove(pos, move);
             nodes += Perft::PerftMain(pos, depth - 1);
-            Moves::unmakeMove(pos, move);         
+            Moves::unmakeMove(pos, move, metadata);         
         }
     }
     return nodes; 

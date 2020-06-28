@@ -28,7 +28,7 @@ struct CheckType {
 };
 
 namespace PieceMoves {
-    CheckType getCheckData(int kingsq, Board friendly, Board enemy);
+    CheckType getCheckData(int kingsq, bool side, Board friendly, Board enemy);
 };
 
 extern uint64_t PawnCaptureMasks[2][64];

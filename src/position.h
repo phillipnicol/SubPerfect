@@ -25,9 +25,6 @@ class Position {
         uint64_t safety_map; 
         int kingsq; 
 
-        //necessary for make and unmake 
-        char prev_en_passant_target; 
-
         //Public member functions
         bool isinCheck(); 
         bool isLegal(Move move); 
@@ -63,6 +60,22 @@ inline bool Position::isLegal(Move move) {
         enemycopy.bishop &= dest; enemycopy.queen &= dest;
 
         return !squareAttacked(move.destination, color, mycopy.all | enemycopy.all, enemycopy); 
+    }
+    else if(move.aggressor == PAWN && move.enpassant) {
+        //check legality of en passant move 
+        Board mycopy = Pieces[color];
+        uint64_t dest = 1ULL << move.destination;
+        uint64_t orig = ~(1ULL << move.origin);
+
+        mycopy.pawn &= orig; mycopy.pawn |= dest; 
+        mycopy.all &= orig; mycopy.all |= dest;
+
+        Board enemycopy = Pieces[!color];
+        int victimsq = color ? move.destination + 8 : move.destination - 8; 
+        victimsq = ~(1ULL << victimsq); 
+        enemycopy.all &= victimsq; enemycopy.pawn &= victimsq; 
+
+        return !squareAttacked(kingsq, color, mycopy.all | enemycopy.all, enemycopy); 
     }
     else {
         return true; 

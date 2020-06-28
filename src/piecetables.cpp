@@ -98,11 +98,11 @@ void PieceTables::makePawnMasks() {
         uint64_t pos = 1ULL << i; 
         if(pos & FILE_A) {
             PawnCaptureMasks[0][i] = (pos << 9);
-            PawnCaptureMasks[1][i] = (pos >> 9); 
+            PawnCaptureMasks[1][i] = (pos >> 7); 
         }
         else if(pos & FILE_H) {
             PawnCaptureMasks[0][i] = (pos << 7);
-            PawnCaptureMasks[1][i] = (pos >> 7);
+            PawnCaptureMasks[1][i] = (pos >> 9);
         }
         else {
             PawnCaptureMasks[0][i] = (pos << 7) | (pos << 9);

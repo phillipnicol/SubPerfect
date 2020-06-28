@@ -9,7 +9,7 @@ std::vector<Move> Moves::generateMoves(Position &pos) {
     pos.pinned = getPinned(pos);
 
     if(pos.isinCheck()) {
-        CheckType checkdata = PieceMoves::getCheckData(pos.kingsq, pos.Pieces[pos.color], pos.Pieces[!pos.color]);
+        CheckType checkdata = PieceMoves::getCheckData(pos.kingsq, pos.color, pos.Pieces[pos.color], pos.Pieces[!pos.color]);
         pos.safety_map = checkdata.safety_map; 
         
         kingMoves(pos, moves);
@@ -36,7 +36,7 @@ std::vector<Move> Moves::generateMoves(Position &pos) {
     return moves; 
 }
 
-void Moves::makeMove(Position &pos, Move &move) {
+GameState Moves::makeMove(Position &pos, Move &move) {
     //find which piece is to be moved 
     //place on desired square 
     uint64_t dest = 1ULL << move.destination;  
@@ -120,13 +120,15 @@ void Moves::makeMove(Position &pos, Move &move) {
     }
     else if(move.aggressor == PAWN && move.enpassant) {
         move.victim = PAWN; 
-        int victimsq = pos.color ? move.destination - 8 : move.destination + 8; 
+        int victimsq = pos.color ? move.destination + 8 : move.destination - 8; 
         //remove victim from the board
-        pos.Pieces[!pos.color].pawn = ~(1ULL << victimsq);
-        pos.Pieces[!pos.color].all = ~(1ULL << victimsq); 
+        pos.Pieces[!pos.color].pawn &= ~(1ULL << victimsq);
+        pos.Pieces[!pos.color].all &= ~(1ULL << victimsq); 
     }
 
     //*** update game metadata ***// 
+    GameState metadata;
+    metadata.eptarget = pos.en_passant_target;
     if(pos.color == BLACK) {++pos.fullmove_number;} //update move number
     pos.color = !pos.color; //switch color
     if(move.victim != QUIET || move.aggressor == PAWN) {
@@ -137,21 +139,23 @@ void Moves::makeMove(Position &pos, Move &move) {
     }
 
     if(move.aggressor == PAWN && abs(move.destination - move.origin) > 10) {
-        pos.prev_en_passant_target = pos.en_passant_target; 
         pos.en_passant_target = pos.color ? move.destination - 8 : move.destination + 8; 
     }
+    else {
+        pos.en_passant_target = 65; 
+    }
+
+    return metadata; 
 }
 
-void Moves::unmakeMove(Position &pos, Move move) {
+void Moves::unmakeMove(Position &pos, Move move, GameState metadata) {
     //Update game metadata
     if(pos.color == WHITE) {--pos.fullmove_number;}
     pos.color = !pos.color;
     if(move.victim == QUIET && move.aggressor != PAWN) {
         --pos.halfmove_clock;
     }
-    if(pos.en_passant_target != 65) {
-        pos.en_passant_target = pos.prev_en_passant_target; 
-    }
+    pos.en_passant_target = metadata.eptarget; 
 
     uint64_t orig = 1ULL << move.origin; 
     uint64_t dest = 1ULL << move.destination; 
@@ -234,7 +238,7 @@ void Moves::unmakeMove(Position &pos, Move move) {
         pos.Pieces[!pos.color].pawn &= dest;
         pos.Pieces[!pos.color].all &= dest;
 
-        int realsq = pos.color ? move.destination - 8 : move.destination + 8; 
+        int realsq = pos.color ? move.destination + 8 : move.destination - 8; 
         
         pos.Pieces[!pos.color].pawn |= (1ULL << realsq);
         pos.Pieces[!pos.color].all |= (1ULL << realsq); 
