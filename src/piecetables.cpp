@@ -4,8 +4,7 @@
 #include<algorithm> 
 #include"piecetables.h"
 
-uint32_t PawnPushMasks[2][64]; 
-uint32_t PawnCaptureMasks[2][64];
+uint64_t PawnCaptureMasks[2][64];
 std::vector<uint64_t> BishopMasks(64,0);
 std::vector<uint64_t> RookMasks(64,0);
 std::vector<uint64_t> KingMasks(64,0);
@@ -94,12 +93,6 @@ void PieceTables::fillRookMagicBB(std::vector<std::vector<uint64_t> > &Rays) {
 }
 
 void PieceTables::makePawnMasks() {
-    //fill pawn push masks
-    for(int i = 0; i < 64; ++i) {
-        uint64_t pos = 1ULL << i; 
-        PawnCaptureMasks[0][i] = (pos << 8);
-        PawnCaptureMasks[1][i] = (pos >> 8); 
-    }
     //fill pawn capture masks 
     for(int i = 0; i < 64; ++i) {
         uint64_t pos = 1ULL << i; 

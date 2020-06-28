@@ -4,8 +4,11 @@ int main() {
     PieceTables::init();
 
     Position pos;
-    pos.setFEN("8/8/8/8/8/8/P7/3k3K w - - 0 1");
+    pos.setFEN("8/8/8/Pp6/8/8/8/3k3K w - b6 0 1");
     pos.printPosition(); 
 
-    Perft::Perft("8/8/8/8/8/8/P7/3k3K w - - 0 1", 6, true);
+    std::vector<Move> moves = Moves::generateMoves(pos);
+    std::cout << moves.size() << std::endl; 
+
+    //Perft::Perft("8/8/8/Pp6/8/8/8/3k3K w - b6 0 1", 6, true);
 }

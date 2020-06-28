@@ -31,7 +31,7 @@ namespace PieceMoves {
     CheckType getCheckData(int kingsq, Board friendly, Board enemy);
 };
 
-extern uint32_t PawnCaptureMasks[2][64];
+extern uint64_t PawnCaptureMasks[2][64];
 extern std::vector<uint64_t> BishopMasks;
 extern std::vector<uint64_t> RookMasks;
 extern std::vector<uint64_t> KnightMasks; 

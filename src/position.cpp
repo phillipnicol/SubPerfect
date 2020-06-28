@@ -90,7 +90,8 @@ void Position::setFEN(std::string FEN) {
     else {
         file = FEN.at(it) - 'a'; 
         ++it;
-        rank = FEN.at(it) - '0';
+        rank = FEN.at(it) - '1';
+        en_passant_target = 8*rank + file; 
         it += 2; 
     }
     

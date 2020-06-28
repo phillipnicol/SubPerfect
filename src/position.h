@@ -25,6 +25,9 @@ class Position {
         uint64_t safety_map; 
         int kingsq; 
 
+        //necessary for make and unmake 
+        char prev_en_passant_target; 
+
         //Public member functions
         bool isinCheck(); 
         bool isLegal(Move move); 

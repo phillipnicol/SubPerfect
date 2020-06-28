@@ -118,8 +118,15 @@ void Moves::makeMove(Position &pos, Move &move) {
                 break;
         }
     }
+    else if(move.aggressor == PAWN && move.enpassant) {
+        move.victim = PAWN; 
+        int victimsq = pos.color ? move.destination - 8 : move.destination + 8; 
+        //remove victim from the board
+        pos.Pieces[!pos.color].pawn = ~(1ULL << victimsq);
+        pos.Pieces[!pos.color].all = ~(1ULL << victimsq); 
+    }
 
-    //update game metadata 
+    //*** update game metadata ***// 
     if(pos.color == BLACK) {++pos.fullmove_number;} //update move number
     pos.color = !pos.color; //switch color
     if(move.victim != QUIET || move.aggressor == PAWN) {
@@ -127,6 +134,11 @@ void Moves::makeMove(Position &pos, Move &move) {
     } //for 50 move draw
     else {
         ++pos.halfmove_clock; 
+    }
+
+    if(move.aggressor == PAWN && abs(move.destination - move.origin) > 10) {
+        pos.prev_en_passant_target = pos.en_passant_target; 
+        pos.en_passant_target = pos.color ? move.destination - 8 : move.destination + 8; 
     }
 }
 
@@ -136,6 +148,9 @@ void Moves::unmakeMove(Position &pos, Move move) {
     pos.color = !pos.color;
     if(move.victim == QUIET && move.aggressor != PAWN) {
         --pos.halfmove_clock;
+    }
+    if(pos.en_passant_target != 65) {
+        pos.en_passant_target = pos.prev_en_passant_target; 
     }
 
     uint64_t orig = 1ULL << move.origin; 
@@ -212,6 +227,17 @@ void Moves::unmakeMove(Position &pos, Move move) {
                 pos.Pieces[pos.color].queen &= dest;
                 break;
         }       
+    }
+    //***undo enpassant***//
+    if(move.aggressor == PAWN && move.enpassant) {
+        //victim is in the wrong spot, lets put it back
+        pos.Pieces[!pos.color].pawn &= dest;
+        pos.Pieces[!pos.color].all &= dest;
+
+        int realsq = pos.color ? move.destination - 8 : move.destination + 8; 
+        
+        pos.Pieces[!pos.color].pawn |= (1ULL << realsq);
+        pos.Pieces[!pos.color].all |= (1ULL << realsq); 
     }
 }
 
@@ -346,6 +372,7 @@ void rookMoves(Position &pos, std::vector<Move> &moves) {
 void pawnMoves(Position &pos, std::vector<Move> &moves) {
     Move move;
     move.aggressor = PAWN; 
+    move.promotion = false; 
     move.enpassant = false; 
 
     uint64_t emptysquares = ~pos.all; 
@@ -369,17 +396,12 @@ void pawnMoves(Position &pos, std::vector<Move> &moves) {
 
         //check for promotion 
         if(!side && move.destination >= 56) {
-            move.promotion = true;
             makePromotion(move, moves);
-
         }
         else if(move.destination <= 7) {
-            move.promotion = true;
             makePromotion(move, moves); 
-
         }
         else {
-            move.promotion = false; 
             moves.push_back(move); 
         } 
     }
@@ -397,7 +419,6 @@ void pawnMoves(Position &pos, std::vector<Move> &moves) {
         }
 
         //no promotion possible with double push
-        move.promotion = false;
         moves.push_back(move); 
     }
 
@@ -415,23 +436,20 @@ void pawnMoves(Position &pos, std::vector<Move> &moves) {
 
         //***check for en passant capture ***/
         if(pos.en_passant_target != 65) {
-            //TODO 
+            enPassantCapture(pos.en_passant_target, pos.Pieces[side].pawn, move, moves, side);  
         }
 
         while(pawn_attacks) {
             move.destination = pop_lsb(pawn_attacks);
             if(!side && move.destination >= 56) {
-                move.promotion = true;
                 makePromotion(move, moves);
 
             }
             else if(move.destination <= 7) {
-                move.promotion = true;
                 makePromotion(move, moves); 
 
             }
             else {
-                move.promotion = false; 
                 moves.push_back(move); 
             } 
         }
@@ -468,6 +486,7 @@ uint64_t getPinned(Position &pos) {
 }
 
 void makePromotion(Move currmove, std::vector<Move> &moves) {
+    currmove.promotion = true; 
     currmove.promotype = ROOK;
     moves.push_back(currmove);
     currmove.promotype = KNIGHT;
@@ -476,4 +495,15 @@ void makePromotion(Move currmove, std::vector<Move> &moves) {
     moves.push_back(currmove);
     currmove.promotype = QUEEN;
     moves.push_back(currmove);
+}
+
+void enPassantCapture(int targetsq, uint64_t mypawns, Move currmove, std::vector<Move> &moves, bool side) {
+    currmove.enpassant = true; 
+    uint64_t ep_pawns = getPawnCapturesPseudoLegal(targetsq, !side, mypawns);
+    while(ep_pawns) {
+        //max size is two 
+        currmove.origin = pop_lsb(ep_pawns);
+        currmove.destination = targetsq; 
+        moves.push_back(currmove); 
+    }
 }
