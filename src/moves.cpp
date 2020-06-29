@@ -374,6 +374,8 @@ void rookMoves(Position &pos, std::vector<Move> &moves) {
 }
 
 void pawnMoves(Position &pos, std::vector<Move> &moves) {
+    if(pos.Pieces[pos.color].pawn == 0ULL) {return;}
+
     Move move;
     move.aggressor = PAWN; 
     move.promotion = false; 
@@ -392,7 +394,14 @@ void pawnMoves(Position &pos, std::vector<Move> &moves) {
 
         //check for pin
         if((1ULL << move.origin) & pos.pinned) {
-            if((getRookPseudoLegal(move.destination, pos.all) & getRookPseudoLegal(pos.kingsq, pos.all) & getRookPseudoLegal(move.origin, pos.all)) == 0) {
+            if(getRookPseudoLegal(pos.kingsq, pos.all) & (1ULL << move.origin)) {
+                if((getRookPseudoLegal(move.destination, pos.all) & (1ULL << pos.kingsq)) == 0) {
+                    continue; 
+                }
+            }
+            else {
+                pos.printPosition();
+                std::cout << "SINGLE PUSH" << std::endl;
                 continue; 
             }
         }
@@ -418,8 +427,14 @@ void pawnMoves(Position &pos, std::vector<Move> &moves) {
         side ? move.destination = move.origin - 16 : move.destination = move.origin + 16; 
 
         if((1ULL << move.origin) & pos.pinned) {
-            if((getRookPseudoLegal(move.destination, pos.all) & getRookPseudoLegal(pos.kingsq, pos.all) & getRookPseudoLegal(move.origin, pos.all)) == 0) {
-                continue; 
+            if(getRookPseudoLegal(pos.kingsq, pos.all) & (1ULL << move.origin)) {
+                if((getRookPseudoLegal(move.destination, pos.all) & (1ULL << pos.kingsq)) == 0) {
+                    continue; 
+                }
+            }
+            else {
+                pos.printPosition();
+                std::cout << "DBL PUSH" << std::endl;
             }
         }
 
@@ -435,14 +450,6 @@ void pawnMoves(Position &pos, std::vector<Move> &moves) {
         uint64_t pawn_attacks = getPawnCapturesPseudoLegal(move.origin, side, pos.Pieces[!side].all);
         pawn_attacks &= pos.safety_map; 
 
-        //pins 
-        if((1ULL << move.origin) & pos.pinned) {
-            pos.printPosition(); 
-            if((getBishopPseudoLegal(move.destination, pos.all) & getBishopPseudoLegal(pos.kingsq, pos.all) & getBishopPseudoLegal(move.origin, pos.all)) == 0) {
-                continue; 
-            }
-        }
-
         //***check for en passant capture ***/
         if(pos.en_passant_target != 65) {
             enPassantCapture(pos.en_passant_target, pos.Pieces[side].pawn, move, moves, side);  
@@ -450,6 +457,19 @@ void pawnMoves(Position &pos, std::vector<Move> &moves) {
 
         while(pawn_attacks) {
             move.destination = pop_lsb(pawn_attacks);
+            //pins 
+            if((1ULL << move.origin) & pos.pinned) {
+                if(getBishopPseudoLegal(pos.kingsq, pos.all) & (1ULL << move.origin)) {
+                    if((getBishopPseudoLegal(move.destination, pos.all) & (1ULL << pos.kingsq)) == 0) {
+                        continue; 
+                    }
+                }
+                else {
+                    pos.printPosition();
+                    std::cout << "CAPTURE" << std::endl;
+                }
+            }
+
             if(!side && move.destination >= 56) {
                 makePromotion(move, moves);
 
