@@ -386,11 +386,13 @@ void pawnMoves(Position &pos, std::vector<Move> &moves) {
     //*** Get single push ***//
     uint64_t singlepush = getPawnSinglePush(pos.Pieces[side].pawn, emptysquares, side); 
 
-    singlepush &= pos.safety_map; 
-
     while(singlepush) {
         move.origin = pop_lsb(singlepush);
         side ? move.destination = move.origin - 8 : move.destination = move.origin + 8;
+
+        if(((1ULL << move.destination) & pos.safety_map) == 0) {
+            continue; 
+        }
 
         //check for pin
         if((1ULL << move.origin) & pos.pinned) {
@@ -420,15 +422,20 @@ void pawnMoves(Position &pos, std::vector<Move> &moves) {
 
     //*** get double pushes***//
     uint64_t doublepush = getPawnDoublePush(pos.Pieces[side].pawn, emptysquares, side);
-    doublepush &= pos.safety_map; 
 
     while(doublepush) {
         move.origin = pop_lsb(doublepush);
         side ? move.destination = move.origin - 16 : move.destination = move.origin + 16; 
 
+        if(((1ULL << move.destination) & pos.safety_map) == 0) {
+            continue; 
+        }
+
         if((1ULL << move.origin) & pos.pinned) {
             if(getRookPseudoLegal(pos.kingsq, pos.all) & (1ULL << move.origin)) {
+                std::cout << "DBL if" << std::endl;
                 if((getRookPseudoLegal(move.destination, pos.all) & (1ULL << pos.kingsq)) == 0) {
+                    std::cout << "Double pin reject" << std::endl;
                     continue; 
                 }
             }
@@ -460,7 +467,9 @@ void pawnMoves(Position &pos, std::vector<Move> &moves) {
             //pins 
             if((1ULL << move.origin) & pos.pinned) {
                 if(getBishopPseudoLegal(pos.kingsq, pos.all) & (1ULL << move.origin)) {
+                    std::cout << "Capture if" << std::endl;
                     if((getBishopPseudoLegal(move.destination, pos.all) & (1ULL << pos.kingsq)) == 0) {
+                        std::cout << "Capture pin reject" << std::endl;
                         continue; 
                     }
                 }
