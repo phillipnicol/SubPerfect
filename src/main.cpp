@@ -4,7 +4,7 @@ int main() {
     PieceTables::init();
 
     Position pos;
-    pos.setFEN("Q7/1p6/8/2k5/8/8/8/7K w - - 0 1");
+    pos.setFEN("8/8/8/8/8/8/P7/5K1k w - - 0 1");
     pos.printPosition(); 
 
     /*
@@ -29,5 +29,5 @@ int main() {
 
     */
 
-    Perft::Perft("rnbqkbnr/8/8/8/8/8/8/RNBQKBNR w - - 0 1", 5, true);
+   Perft::Perft("8/Pp6/8/8/8/8/P7/5K1k w - - 0 1", 2, true); 
 }
