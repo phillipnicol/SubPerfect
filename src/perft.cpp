@@ -35,7 +35,10 @@ uint64_t Perft::PerftMain(Position pos, int depth) {
     if(depth == 1) {
         for(auto move : moves) {
             if(pos.isLegal(move)) {
+                GameState metadata = Moves::makeMove(pos, move);
+                pos.printPosition();
                 ++nodes;
+                Moves::unmakeMove(pos, move, metadata);    
             }
         }
         return nodes; 
@@ -49,4 +52,34 @@ uint64_t Perft::PerftMain(Position pos, int depth) {
     }
     return nodes; 
 }
+
+
+void Perft::PerftDivide(std::string FEN, int depth, int split) {
+    Position pos;
+    pos.setFEN(FEN); 
+    uint64_t nodes = 0;
+    std::vector<Move> moves = Moves::generateMoves(pos);  
+    split = depth - split; 
+
+    if(depth == 1) {
+        for(auto move : moves) {
+            if(pos.isLegal(move)) {
+                ++nodes;
+            }
+        }
+    }
+    for(auto move : moves) {
+        if(pos.isLegal(move)) {
+            GameState metadata = Moves::makeMove(pos, move);
+            int new_nodes = Perft::PerftMain(pos, depth - 1);
+            Moves::unmakeMove(pos, move, metadata);   
+            if(depth >= split) {
+                std::cout << move.origin << " " << move.destination;
+                std::cout << ": " << new_nodes << std::endl;
+            }      
+        }
+    }
+}
+
+
 

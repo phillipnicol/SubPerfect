@@ -6,6 +6,7 @@
 namespace Perft { 
     uint64_t Perft(std::string FEN, int depth, bool verbose);
     uint64_t PerftMain(Position pos, int depth);
+    void PerftDivide(std::string FEN, int depth, int split);
 }
 
 #endif 

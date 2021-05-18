@@ -396,16 +396,7 @@ void pawnMoves(Position &pos, std::vector<Move> &moves) {
 
         //check for pin
         if((1ULL << move.origin) & pos.pinned) {
-            if(getRookPseudoLegal(pos.kingsq, pos.all) & (1ULL << move.origin)) {
-                if((getRookPseudoLegal(move.destination, pos.all) & (1ULL << pos.kingsq)) == 0) {
-                    continue; 
-                }
-            }
-            else {
-                pos.printPosition();
-                std::cout << "SINGLE PUSH" << std::endl;
-                continue; 
-            }
+            continue;
         }
 
         //check for promotion 
@@ -432,17 +423,7 @@ void pawnMoves(Position &pos, std::vector<Move> &moves) {
         }
 
         if((1ULL << move.origin) & pos.pinned) {
-            if(getRookPseudoLegal(pos.kingsq, pos.all) & (1ULL << move.origin)) {
-                std::cout << "DBL if" << std::endl;
-                if((getRookPseudoLegal(move.destination, pos.all) & (1ULL << pos.kingsq)) == 0) {
-                    std::cout << "Double pin reject" << std::endl;
-                    continue; 
-                }
-            }
-            else {
-                pos.printPosition();
-                std::cout << "DBL PUSH" << std::endl;
-            }
+            continue;
         }
 
         //no promotion possible with double push
@@ -467,15 +448,13 @@ void pawnMoves(Position &pos, std::vector<Move> &moves) {
             //pins 
             if((1ULL << move.origin) & pos.pinned) {
                 if(getBishopPseudoLegal(pos.kingsq, pos.all) & (1ULL << move.origin)) {
-                    std::cout << "Capture if" << std::endl;
                     if((getBishopPseudoLegal(move.destination, pos.all) & (1ULL << pos.kingsq)) == 0) {
-                        std::cout << "Capture pin reject" << std::endl;
                         continue; 
                     }
+                    //else the capture removes the pin 
                 }
                 else {
-                    pos.printPosition();
-                    std::cout << "CAPTURE" << std::endl;
+                    continue; //if it is pinned by a non-bishop piece it is invalid
                 }
             }
 
