@@ -32,5 +32,5 @@ int main() {
 
     */
 
-   Perft::Perft("8/Pp6/8/P7/8/8/8/4K2k b - - 0 1", 2, true); 
+   Perft::Perft("8/P7/8/Pp6/8/8/8/4K2k w - b6 0 1", 7, true); 
 }

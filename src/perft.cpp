@@ -35,10 +35,7 @@ uint64_t Perft::PerftMain(Position pos, int depth) {
     if(depth == 1) {
         for(auto move : moves) {
             if(pos.isLegal(move)) {
-                GameState metadata = Moves::makeMove(pos, move);
-                pos.printPosition();
                 ++nodes;
-                Moves::unmakeMove(pos, move, metadata);    
             }
         }
         return nodes; 

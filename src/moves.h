@@ -10,7 +10,7 @@ struct GameState {
 
 uint64_t getPinned(Position &pos);
 void makePromotion(Move currmove, std::vector<Move> &moves);
-void enPassantCapture(int targetsq, uint64_t mypawns, Move currmove, std::vector<Move> &moves, bool side);
+void enPassantCapture(int targetsq, Move currmove, std::vector<Move> &moves, bool side);
 
 void kingMoves(Position &pos, std::vector<Move> &moves);
 void queenMoves(Position &pos, std::vector<Move> &moves);

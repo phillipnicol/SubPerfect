@@ -440,7 +440,7 @@ void pawnMoves(Position &pos, std::vector<Move> &moves) {
 
         //***check for en passant capture ***/
         if(pos.en_passant_target != 65) {
-            enPassantCapture(pos.en_passant_target, pos.Pieces[side].pawn, move, moves, side);  
+            enPassantCapture(pos.en_passant_target, move, moves, pos.color);  
         }
 
         while(pawn_attacks) {
@@ -514,13 +514,11 @@ void makePromotion(Move currmove, std::vector<Move> &moves) {
     moves.push_back(currmove);
 }
 
-void enPassantCapture(int targetsq, uint64_t mypawns, Move currmove, std::vector<Move> &moves, bool side) {
-    currmove.enpassant = true; 
-    uint64_t ep_pawns = getPawnCapturesPseudoLegal(targetsq, !side, mypawns);
-    while(ep_pawns) {
-        //max size is two 
-        currmove.origin = pop_lsb(ep_pawns);
+void enPassantCapture(int targetsq, Move currmove, std::vector<Move> &moves, bool side) {
+    uint64_t pawnsq = getPawnCapturesPseudoLegal(targetsq, !side, 1ULL << currmove.origin);
+    if(pawnsq != 0) {
         currmove.destination = targetsq; 
+        currmove.enpassant = true;
         moves.push_back(currmove); 
     }
 }
